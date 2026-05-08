@@ -70,7 +70,7 @@ export default function CycleParkingFinder() {
     location: EDINBURGH_FALLBACK_LOCATION,
     message: "Using central Edinburgh until you share your location.",
   });
-  const [selectedId, setSelectedId] = useState<string | null>(parkingPoints[0]?.id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
@@ -84,6 +84,7 @@ export default function CycleParkingFinder() {
       location: urlLocation,
       message: "Sorted by the location in the URL.",
     });
+    setSelectedId(null);
   }, []);
 
   const nearbyPoints = useMemo(
@@ -116,6 +117,8 @@ export default function CycleParkingFinder() {
     null;
 
   function requestLocation() {
+    setSelectedId(null);
+
     if (!("geolocation" in navigator)) {
       setLocationState({
         status: "unavailable",

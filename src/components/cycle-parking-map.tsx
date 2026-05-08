@@ -37,9 +37,11 @@ const userIcon = L.divIcon({
 });
 
 function MapFocus({
+  nearestPoint,
   selectedPoint,
   userLocation,
 }: {
+  nearestPoint: ParkingPoint | null;
   selectedPoint: ParkingPoint | null;
   userLocation: UserLocation;
 }) {
@@ -47,6 +49,21 @@ function MapFocus({
 
   useEffect(() => {
     if (selectedPoint) {
+      if (selectedPoint.id === nearestPoint?.id) {
+        const bounds = L.latLngBounds([
+          [userLocation.latitude, userLocation.longitude],
+          [selectedPoint.latitude, selectedPoint.longitude],
+        ]);
+
+        map.fitBounds(bounds, {
+          animate: true,
+          duration: 0.7,
+          maxZoom: 16,
+          padding: [56, 56],
+        });
+        return;
+      }
+
       map.flyTo([selectedPoint.latitude, selectedPoint.longitude], Math.max(map.getZoom(), 16), {
         duration: 0.7,
       });
@@ -54,7 +71,7 @@ function MapFocus({
     }
 
     map.setView([userLocation.latitude, userLocation.longitude], 14);
-  }, [map, selectedPoint, userLocation]);
+  }, [map, nearestPoint, selectedPoint, userLocation]);
 
   return null;
 }
@@ -88,7 +105,11 @@ export default function CycleParkingMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <MapFocus selectedPoint={selectedPoint} userLocation={userLocation} />
+      <MapFocus
+        nearestPoint={nearestPoint}
+        selectedPoint={selectedPoint}
+        userLocation={userLocation}
+      />
       <Marker position={[userLocation.latitude, userLocation.longitude]} icon={userIcon}>
         <Popup>
           <div className="parking-popup">
