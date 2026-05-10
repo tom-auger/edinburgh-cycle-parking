@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { distanceMeters, formatDistance, sortByDistance } from "@/lib/geo";
+import { distanceMeters, formatDistance, isResolvedLocation, sortByDistance } from "@/lib/geo";
 import type { ParkingPoint } from "@/lib/types";
 
 const points: ParkingPoint[] = [
@@ -39,6 +39,17 @@ describe("geo utilities", () => {
 
   it("handles empty point lists", () => {
     expect(sortByDistance([], { latitude: 55.9533, longitude: -3.1883 })).toEqual([]);
+  });
+
+  it("rejects unresolved null-island coordinates", () => {
+    expect(isResolvedLocation({ latitude: 0, longitude: 0 })).toBe(false);
+    expect(isResolvedLocation({ latitude: 0.00001, longitude: -0.00001 })).toBe(false);
+    expect(isResolvedLocation({ latitude: 55.9533, longitude: -3.1883 })).toBe(true);
+  });
+
+  it("rejects out-of-range coordinates", () => {
+    expect(isResolvedLocation({ latitude: 91, longitude: -3.1883 })).toBe(false);
+    expect(isResolvedLocation({ latitude: 55.9533, longitude: -181 })).toBe(false);
   });
 
   it("formats metres and kilometres", () => {

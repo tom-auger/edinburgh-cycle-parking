@@ -5,7 +5,26 @@ export const EDINBURGH_FALLBACK_LOCATION: UserLocation = {
   longitude: -3.1883,
 };
 
+const nullIslandThresholdDegrees = 0.0001;
 const earthRadiusMeters = 6_371_000;
+
+export function isResolvedLocation(location: UserLocation) {
+  if (
+    !Number.isFinite(location.latitude) ||
+    !Number.isFinite(location.longitude) ||
+    location.latitude < -90 ||
+    location.latitude > 90 ||
+    location.longitude < -180 ||
+    location.longitude > 180
+  ) {
+    return false;
+  }
+
+  return (
+    Math.abs(location.latitude) > nullIslandThresholdDegrees ||
+    Math.abs(location.longitude) > nullIslandThresholdDegrees
+  );
+}
 
 function toRadians(value: number) {
   return (value * Math.PI) / 180;

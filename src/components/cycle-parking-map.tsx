@@ -1,7 +1,7 @@
 "use client";
 
 import L from "leaflet";
-import { AttributionControl, MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { useEffect, useMemo } from "react";
 import type { ParkingPoint, UserLocation } from "@/lib/types";
 import { formatDistance } from "@/lib/geo";
@@ -76,6 +76,16 @@ function MapFocus({
   return null;
 }
 
+function AttributionPrefix() {
+  const map = useMap();
+
+  useEffect(() => {
+    map.attributionControl.setPrefix(false);
+  }, [map]);
+
+  return null;
+}
+
 export default function CycleParkingMap({
   points,
   userLocation,
@@ -93,14 +103,8 @@ export default function CycleParkingMap({
   );
 
   return (
-    <MapContainer
-      attributionControl={false}
-      center={defaultCenter}
-      zoom={13}
-      scrollWheelZoom
-      className="bike-map"
-    >
-      <AttributionControl position="bottomright" prefix={false} />
+    <MapContainer center={defaultCenter} zoom={13} scrollWheelZoom className="bike-map">
+      <AttributionPrefix />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

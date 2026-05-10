@@ -1,18 +1,16 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import {
-  Bike,
-  Crosshair,
-  LocateFixed,
-  MapPin,
-  Navigation,
-  Search,
-} from "lucide-react";
+import { Bike, Crosshair, LocateFixed, MapPin, Navigation, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import cycleParkingDataset from "@/data/cycle-parking.json";
 import type { ParkingPoint, UserLocation } from "@/lib/types";
-import { EDINBURGH_FALLBACK_LOCATION, formatDistance, sortByDistance } from "@/lib/geo";
+import {
+  EDINBURGH_FALLBACK_LOCATION,
+  formatDistance,
+  isResolvedLocation,
+  sortByDistance,
+} from "@/lib/geo";
 
 const CycleParkingMap = dynamic(() => import("@/components/cycle-parking-map"), {
   ssr: false,
@@ -52,15 +50,13 @@ function getUrlLocation() {
   const latitude = Number(params.get("lat"));
   const longitude = Number(params.get("lng"));
 
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+  const location = { latitude, longitude };
+
+  if (!isResolvedLocation(location)) {
     return null;
   }
 
-  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-    return null;
-  }
-
-  return { latitude, longitude };
+  return location;
 }
 
 export default function CycleParkingFinder() {
@@ -130,12 +126,22 @@ export default function CycleParkingFinder() {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        const location = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
+
+        if (!isResolvedLocation(location)) {
+          setLocationState({
+            status: "unavailable",
+            location: EDINBURGH_FALLBACK_LOCATION,
+          });
+          return;
+        }
+
         setLocationState({
           status: "located",
-          location: {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          },
+          location,
         });
       },
       (error) => {
@@ -202,7 +208,6 @@ export default function CycleParkingFinder() {
             {locationState.status === "locating" ? "Locating" : "Use my location"}
           </button>
         </section>
-
 
         <label className="search-box">
           <Search size={17} aria-hidden="true" />
