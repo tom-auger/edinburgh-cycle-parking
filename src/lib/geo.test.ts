@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { distanceMeters, formatDistance, isResolvedLocation, sortByDistance } from "@/lib/geo";
+import {
+  distanceMeters,
+  formatDistance,
+  isFarFromNearestParking,
+  isResolvedLocation,
+  sortByDistance,
+} from "@/lib/geo";
+import { parsePlaceSearchResults } from "@/lib/geocoder";
+import { describeParkingPoint, getParkingDetails } from "@/lib/parking";
 import type { ParkingPoint } from "@/lib/types";
 
 const points: ParkingPoint[] = [
@@ -35,10 +43,16 @@ describe("geo utilities", () => {
 
     expect(sorted.map((point) => point.id)).toEqual(["near", "far"]);
     expect(sorted[0]?.distanceMeters).toBeLessThan(sorted[1]?.distanceMeters ?? 0);
+    expect(sorted.every((point) => typeof point.distanceMeters === "number")).toBe(true);
   });
 
   it("handles empty point lists", () => {
     expect(sortByDistance([], { latitude: 55.9533, longitude: -3.1883 })).toEqual([]);
+  });
+
+  it("detects locations far from Edinburgh cycle parking", () => {
+    expect(isFarFromNearestParking(points, { latitude: 51.5072, longitude: -0.1276 })).toBe(true);
+    expect(isFarFromNearestParking(points, { latitude: 55.9533, longitude: -3.1883 })).toBe(false);
   });
 
   it("rejects unresolved null-island coordinates", () => {
@@ -55,5 +69,76 @@ describe("geo utilities", () => {
   it("formats metres and kilometres", () => {
     expect(formatDistance(42.4)).toBe("42 m");
     expect(formatDistance(1_250)).toBe("1.3 km");
+  });
+
+  it("formats parking details with not-listed values", () => {
+    const [distance, spaces, type, cover, access] = getParkingDetails({
+      id: "details",
+      name: "Details point",
+      latitude: 55.9533,
+      longitude: -3.1883,
+      distanceMeters: 42,
+      properties: {
+        capacity: 0,
+        bicycle_pa: " ",
+        covered: " ",
+        access: null,
+      },
+    });
+
+    expect(distance?.value).toBe("42 m away");
+    expect(spaces?.value).toBe("Not listed");
+    expect(type?.value).toBe("Not listed");
+    expect(cover?.value).toBe("Not listed");
+    expect(access?.value).toBe("Not listed");
+  });
+
+  it("summarizes populated parking details", () => {
+    expect(
+      describeParkingPoint({
+        id: "summary",
+        name: "Summary point",
+        latitude: 55.9533,
+        longitude: -3.1883,
+        properties: {
+          capacity: 8,
+          bicycle_pa: "stands",
+          covered: "no",
+        },
+      }),
+    ).toBe("8 spaces, stands, not covered");
+  });
+
+  it("parses valid place search results and rejects invalid coordinates", () => {
+    expect(
+      parsePlaceSearchResults([
+        {
+          display_name: "Meadows, Edinburgh, Scotland, United Kingdom",
+          lat: "55.941",
+          lon: "-3.191",
+          osm_id: 123,
+        },
+        {
+          display_name: "Null Island",
+          lat: "0",
+          lon: "0",
+          osm_id: 456,
+        },
+        {
+          display_name: "Invalid",
+          lat: "not-a-number",
+          lon: "-3.191",
+        },
+      ]),
+    ).toEqual([
+      {
+        id: "123",
+        name: "Meadows, Edinburgh, Scotland, United Kingdom",
+        location: {
+          latitude: 55.941,
+          longitude: -3.191,
+        },
+      },
+    ]);
   });
 });

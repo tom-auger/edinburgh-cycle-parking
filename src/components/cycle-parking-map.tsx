@@ -4,7 +4,7 @@ import L from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { useEffect, useMemo } from "react";
 import type { ParkingPoint, UserLocation } from "@/lib/types";
-import { formatDistance } from "@/lib/geo";
+import { getParkingDetails } from "@/lib/parking";
 
 type CycleParkingMapProps = {
   points: ParkingPoint[];
@@ -142,9 +142,14 @@ export default function CycleParkingMap({
             <Popup>
               <div className="parking-popup">
                 <strong>{point.name}</strong>
-                {typeof point.distanceMeters === "number" ? (
-                  <span>{formatDistance(point.distanceMeters)} away</span>
-                ) : null}
+                <dl>
+                  {getParkingDetails(point).map((detail) => (
+                    <div key={detail.label}>
+                      <dt>{detail.label}</dt>
+                      <dd>{detail.value}</dd>
+                    </div>
+                  ))}
+                </dl>
               </div>
             </Popup>
           </Marker>

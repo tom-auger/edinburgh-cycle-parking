@@ -2,15 +2,22 @@
 
 import dynamic from "next/dynamic";
 import { Bike, Crosshair, LocateFixed, MapPin, Navigation, Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import cycleParkingDataset from "@/data/cycle-parking.json";
+import {
+  buildPlaceSearchUrl,
+  parsePlaceSearchResults,
+  type PlaceSearchResult,
+} from "@/lib/geocoder";
 import type { ParkingPoint, UserLocation } from "@/lib/types";
 import {
   EDINBURGH_FALLBACK_LOCATION,
   formatDistance,
+  isFarFromNearestParking,
   isResolvedLocation,
   sortByDistance,
 } from "@/lib/geo";
+import { describeParkingPoint } from "@/lib/parking";
 
 const CycleParkingMap = dynamic(() => import("@/components/cycle-parking-map"), {
   ssr: false,
@@ -18,30 +25,14 @@ const CycleParkingMap = dynamic(() => import("@/components/cycle-parking-map"), 
 });
 
 const parkingPoints = cycleParkingDataset.points as ParkingPoint[];
-
-function describeParkingPoint(point: ParkingPoint) {
-  const capacity =
-    typeof point.properties.capacity === "number" && point.properties.capacity > 0
-      ? `${point.properties.capacity} spaces`
-      : null;
-  const kind =
-    typeof point.properties.bicycle_pa === "string" && point.properties.bicycle_pa.trim().length > 0
-      ? point.properties.bicycle_pa.trim()
-      : null;
-  const covered =
-    point.properties.covered === "yes"
-      ? "covered"
-      : point.properties.covered === "no"
-        ? "not covered"
-        : null;
-
-  return [capacity, kind, covered].filter(Boolean).join(", ") || "Cycle parking";
-}
+const maxPlaceSearchCacheEntries = 12;
 
 type LocationState =
   | { status: "fallback"; location: UserLocation }
   | { status: "locating"; location: UserLocation }
   | { status: "located"; location: UserLocation }
+  | { status: "searched"; location: UserLocation; label: string }
+  | { status: "too-far"; location: UserLocation }
   | { status: "denied"; location: UserLocation }
   | { status: "unavailable"; location: UserLocation };
 
@@ -59,6 +50,18 @@ function getUrlLocation() {
   return location;
 }
 
+function getLocationLabel(locationState: LocationState) {
+  if (locationState.status === "located") {
+    return "you";
+  }
+
+  if (locationState.status === "searched") {
+    return locationState.label;
+  }
+
+  return "central Edinburgh";
+}
+
 export default function CycleParkingFinder() {
   const [locationState, setLocationState] = useState<LocationState>({
     status: "fallback",
@@ -66,15 +69,18 @@ export default function CycleParkingFinder() {
   });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [placeQuery, setPlaceQuery] = useState("");
+  const [placeResults, setPlaceResults] = useState<PlaceSearchResult[]>([]);
+  const [placeSearchMessage, setPlaceSearchMessage] = useState<string | null>(null);
+  const [isPlaceSearching, setIsPlaceSearching] = useState(false);
+  const [hasUsedPlaceSearch, setHasUsedPlaceSearch] = useState(false);
+  const placeSearchCache = useRef(new Map<string, PlaceSearchResult[]>());
+  const placeSearchInFlight = useRef(false);
 
   useEffect(() => {
     const urlLocation = getUrlLocation();
     if (urlLocation) {
-      setLocationState({
-        status: "located",
-        location: urlLocation,
-      });
-      setSelectedId(null);
+      applyReferenceLocation(urlLocation, "located");
       return;
     }
 
@@ -107,6 +113,36 @@ export default function CycleParkingFinder() {
   const explicitSelectedPoint =
     selectedId !== null ? (nearbyPoints.find((point) => point.id === selectedId) ?? null) : null;
   const selectedPoint = explicitSelectedPoint ?? nearestPoint;
+  const locationLabel = getLocationLabel(locationState);
+
+  function applyReferenceLocation(
+    location: UserLocation,
+    status: Extract<LocationState["status"], "located" | "searched">,
+    label?: string,
+  ) {
+    setSelectedId(null);
+
+    if (status === "located" && isFarFromNearestParking(parkingPoints, location)) {
+      setLocationState({
+        status: "too-far",
+        location: EDINBURGH_FALLBACK_LOCATION,
+      });
+      return;
+    }
+
+    setLocationState(
+      status === "searched"
+        ? {
+            status,
+            location,
+            label: label ?? "selected place",
+          }
+        : {
+            status,
+            location,
+          },
+    );
+  }
 
   function requestLocation() {
     setSelectedId(null);
@@ -139,10 +175,7 @@ export default function CycleParkingFinder() {
           return;
         }
 
-        setLocationState({
-          status: "located",
-          location,
-        });
+        applyReferenceLocation(location, "located");
       },
       (error) => {
         setLocationState({
@@ -158,11 +191,73 @@ export default function CycleParkingFinder() {
     );
   }
 
+  async function searchForPlace(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const trimmedQuery = placeQuery.trim();
+    if (trimmedQuery.length === 0 || placeSearchInFlight.current) {
+      return;
+    }
+
+    const cacheKey = trimmedQuery.toLowerCase();
+    const cachedResults = placeSearchCache.current.get(cacheKey);
+
+    if (cachedResults) {
+      setPlaceResults(cachedResults);
+      setPlaceSearchMessage(
+        cachedResults.length === 0 ? "No matching Edinburgh places found." : null,
+      );
+      return;
+    }
+
+    placeSearchInFlight.current = true;
+    setIsPlaceSearching(true);
+    setPlaceSearchMessage(null);
+
+    try {
+      const response = await fetch(buildPlaceSearchUrl(trimmedQuery), {
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Place search failed");
+      }
+
+      const results = parsePlaceSearchResults(await response.json());
+      placeSearchCache.current.set(cacheKey, results);
+      if (placeSearchCache.current.size > maxPlaceSearchCacheEntries) {
+        const oldestKey = placeSearchCache.current.keys().next().value;
+        if (oldestKey) {
+          placeSearchCache.current.delete(oldestKey);
+        }
+      }
+      setPlaceResults(results);
+      setPlaceSearchMessage(results.length === 0 ? "No matching Edinburgh places found." : null);
+      setHasUsedPlaceSearch(true);
+    } catch {
+      setPlaceResults([]);
+      setPlaceSearchMessage("Place search is unavailable right now.");
+    } finally {
+      placeSearchInFlight.current = false;
+      setIsPlaceSearching(false);
+    }
+  }
+
+  function selectPlace(result: PlaceSearchResult) {
+    setPlaceResults([]);
+    setPlaceSearchMessage(null);
+    setPlaceQuery(result.name.split(",")[0] ?? result.name);
+    setHasUsedPlaceSearch(true);
+    applyReferenceLocation(result.location, "searched", result.name.split(",")[0] ?? result.name);
+  }
+
   return (
     <main className="app-shell">
       <section className="map-pane" aria-label="Cycle parking map">
         <CycleParkingMap
-          points={parkingPoints}
+          points={nearbyPoints}
           userLocation={locationState.location}
           selectedPoint={explicitSelectedPoint}
           nearestPoint={nearestPoint}
@@ -190,35 +285,103 @@ export default function CycleParkingFinder() {
             <h2>{nearestPoint?.name ?? "No parking found"}</h2>
             <p>
               {nearestPoint
-                ? `${formatDistance(nearestPoint.distanceMeters)} from ${locationState.status === "located" ? "you" : "central Edinburgh"} - ${describeParkingPoint(nearestPoint)}`
+                ? `${formatDistance(nearestPoint.distanceMeters)} from ${locationLabel} - ${describeParkingPoint(nearestPoint)}`
                 : "Refresh the dataset and try again."}
             </p>
+            {locationState.status === "too-far" ? (
+              <div className="status-message unavailable" role="status">
+                You're very far away from a bike space, showing bike parking in central edinburgh
+              </div>
+            ) : null}
           </div>
-          <button
-            className="location-button"
-            type="button"
-            onClick={requestLocation}
-            disabled={locationState.status === "locating"}
-          >
-            {locationState.status === "locating" ? (
-              <Crosshair size={18} aria-hidden="true" />
-            ) : (
-              <LocateFixed size={18} aria-hidden="true" />
-            )}
-            {locationState.status === "locating" ? "Locating" : "Use my location"}
-          </button>
         </section>
 
-        <label className="search-box">
-          <Search size={17} aria-hidden="true" />
-          <span className="sr-only">Filter parking locations</span>
-          <input
-            type="search"
-            value={query}
-            placeholder="Filter nearby locations"
-            onChange={(event) => setQuery(event.target.value)}
-          />
-        </label>
+        <section className="reference-panel" aria-label="Search from">
+          <span className="section-label">
+            <MapPin size={15} aria-hidden="true" />
+            Search from
+          </span>
+          <div className="reference-controls">
+            <form
+              className="place-search-form"
+              onSubmit={(event) => {
+                void searchForPlace(event);
+              }}
+            >
+              <label className="search-box">
+                <Search size={17} aria-hidden="true" />
+                <span className="sr-only">Search from a place</span>
+                <input
+                  type="search"
+                  value={placeQuery}
+                  placeholder="Street, postcode, or place"
+                  onChange={(event) => setPlaceQuery(event.target.value)}
+                />
+              </label>
+              <button type="submit" disabled={isPlaceSearching || placeQuery.trim().length === 0}>
+                {isPlaceSearching ? "Searching" : "Search"}
+              </button>
+            </form>
+
+            <button
+              className="secondary-location-button"
+              type="button"
+              onClick={requestLocation}
+              disabled={locationState.status === "locating"}
+            >
+              {locationState.status === "locating" ? (
+                <Crosshair size={18} aria-hidden="true" />
+              ) : (
+                <LocateFixed size={18} aria-hidden="true" />
+              )}
+              {locationState.status === "locating" ? "Locating" : "Use my location"}
+            </button>
+          </div>
+
+          {placeResults.length > 0 ? (
+            <ol className="place-results" aria-label="Place search results">
+              {placeResults.map((result) => (
+                <li key={result.id}>
+                  <button type="button" onClick={() => selectPlace(result)}>
+                    <MapPin size={16} aria-hidden="true" />
+                    <span>{result.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          ) : null}
+
+          {placeSearchMessage ? (
+            <div className="place-search-message" role="status">
+              {placeSearchMessage}
+            </div>
+          ) : null}
+        </section>
+
+        <section className="filter-panel" aria-label="Filter results">
+          <span className="section-label">
+            <Search size={15} aria-hidden="true" />
+            Filter results
+          </span>
+          <label className="search-box">
+            <Search size={17} aria-hidden="true" />
+            <span className="sr-only">Filter parking locations</span>
+            <input
+              type="search"
+              value={query}
+              placeholder="Filter these parking results"
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </label>
+        </section>
+
+        <div className="list-heading">
+          <h2>Nearby cycle parking</h2>
+          <p>
+            Showing {filteredPoints.length}{" "}
+            {query.trim().length > 0 ? "matching results" : "closest results"}
+          </p>
+        </div>
 
         <ol className="parking-list" aria-label="Nearby cycle parking locations">
           {filteredPoints.map((point, index) => (
@@ -250,6 +413,12 @@ export default function CycleParkingFinder() {
         <footer className="attribution">
           <span>{cycleParkingDataset.metadata.attribution}</span>
           <a href={cycleParkingDataset.metadata.licenceUrl}>Open Government Licence v3.0</a>
+          {hasUsedPlaceSearch ? (
+            <span>
+              Place search by <a href="https://nominatim.openstreetmap.org/">Nominatim</a> using
+              OpenStreetMap data.
+            </span>
+          ) : null}
         </footer>
       </aside>
     </main>

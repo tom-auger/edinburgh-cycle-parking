@@ -5,6 +5,8 @@ export const EDINBURGH_FALLBACK_LOCATION: UserLocation = {
   longitude: -3.1883,
 };
 
+export const FAR_FROM_EDINBURGH_THRESHOLD_METERS = 50_000;
+
 const nullIslandThresholdDegrees = 0.0001;
 const earthRadiusMeters = 6_371_000;
 
@@ -52,6 +54,16 @@ export function sortByDistance(points: ParkingPoint[], location: UserLocation) {
       distanceMeters: distanceMeters(location, point),
     }))
     .sort((left, right) => (left.distanceMeters ?? 0) - (right.distanceMeters ?? 0));
+}
+
+export function isFarFromNearestParking(
+  points: ParkingPoint[],
+  location: UserLocation,
+  thresholdMeters = FAR_FROM_EDINBURGH_THRESHOLD_METERS,
+) {
+  const nearestDistance = sortByDistance(points, location)[0]?.distanceMeters;
+
+  return typeof nearestDistance !== "number" || nearestDistance > thresholdMeters;
 }
 
 export function formatDistance(distance: number | undefined) {
