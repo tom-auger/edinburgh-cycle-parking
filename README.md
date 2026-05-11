@@ -4,6 +4,8 @@ Static, mobile-friendly Next.js app for finding nearby City of Edinburgh Council
 
 The app has no backend. It ships a normalized copy of the public ArcGIS Cycle Parking dataset and sorts locations in the browser using the Geolocation API when the user shares their current location.
 
+The app is installable as a Progressive Web App. On Android, supported browsers show an install prompt; on iOS, use Safari's Add to Home Screen flow. After a first successful load, the app shell and bundled parking data are available offline, but live place search and uncached map tiles still need a network connection.
+
 ## Development
 
 ```bash

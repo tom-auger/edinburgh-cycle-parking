@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import PwaInstallPrompt from "@/components/pwa-install-prompt";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
@@ -29,6 +30,9 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="manifest" href={assetPath("/site.webmanifest")} />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="Cycle Parking" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link rel="icon" href={assetPath("/favicon.ico")} sizes="any" />
         <link rel="icon" href={assetPath("/favicon.svg")} type="image/svg+xml" />
         <link rel="icon" href={assetPath("/icon-192.png")} sizes="192x192" type="image/png" />
@@ -40,7 +44,10 @@ export default function RootLayout({
           type="image/png"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <PwaInstallPrompt assetBasePath={assetBasePath} />
+      </body>
     </html>
   );
 }
