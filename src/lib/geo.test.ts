@@ -8,6 +8,12 @@ import {
 } from "@/lib/geo";
 import { parsePlaceSearchResults } from "@/lib/geocoder";
 import { describeParkingPoint, getParkingDetails } from "@/lib/parking";
+import {
+  buildParkingShareUrl,
+  findSharedParkingPoint,
+  parseUrlLocation,
+  parseUrlParkingId,
+} from "@/lib/share-links";
 import type { ParkingPoint } from "@/lib/types";
 
 const points: ParkingPoint[] = [
@@ -140,5 +146,31 @@ describe("geo utilities", () => {
         },
       },
     ]);
+  });
+
+  it("parses a valid parking deep-link id", () => {
+    expect(parseUrlParkingId("?parking=near")).toBe("near");
+    expect(parseUrlParkingId("?parking=%20near%20")).toBe("near");
+    expect(parseUrlParkingId("?parking=")).toBeNull();
+  });
+
+  it("finds shared parking points and ignores unknown ids", () => {
+    expect(findSharedParkingPoint("?parking=near", points)?.id).toBe("near");
+    expect(findSharedParkingPoint("?parking=missing", points)).toBeNull();
+  });
+
+  it("builds parking share links without dropping the current base path", () => {
+    expect(
+      buildParkingShareUrl("https://tom-auger.github.io", "/edinburgh-cycle-parking", "near"),
+    ).toBe("https://tom-auger.github.io/edinburgh-cycle-parking?parking=near");
+  });
+
+  it("parses valid URL coordinates and rejects invalid coordinates", () => {
+    expect(parseUrlLocation("?lat=55.9533&lng=-3.1883")).toEqual({
+      latitude: 55.9533,
+      longitude: -3.1883,
+    });
+    expect(parseUrlLocation("?lat=0&lng=0")).toBeNull();
+    expect(parseUrlLocation("?lat=not-a-number&lng=-3.1883")).toBeNull();
   });
 });

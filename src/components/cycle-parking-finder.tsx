@@ -1,8 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Crosshair, LocateFixed, MapPin, Search } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Crosshair, LocateFixed, MapPin, Search, Share2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import cycleParkingDataset from "@/data/cycle-parking.json";
 import {
   buildPlaceSearchUrl,
@@ -18,6 +18,7 @@ import {
   sortByDistance,
 } from "@/lib/geo";
 import { describeParkingPoint } from "@/lib/parking";
+import { buildParkingShareUrl, findSharedParkingPoint, parseUrlLocation } from "@/lib/share-links";
 
 const CycleParkingMap = dynamic(() => import("@/components/cycle-parking-map"), {
   ssr: false,
@@ -37,18 +38,13 @@ type LocationState =
   | { status: "denied"; location: UserLocation }
   | { status: "unavailable"; location: UserLocation };
 
-function getUrlLocation() {
-  const params = new URLSearchParams(window.location.search);
-  const latitude = Number(params.get("lat"));
-  const longitude = Number(params.get("lng"));
-
-  const location = { latitude, longitude };
-
-  if (!isResolvedLocation(location)) {
-    return null;
+async function copyTextToClipboard(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
   }
-
-  return location;
 }
 
 export default function CycleParkingFinder() {
@@ -60,13 +56,28 @@ export default function CycleParkingFinder() {
   const [placeQuery, setPlaceQuery] = useState("");
   const [placeResults, setPlaceResults] = useState<PlaceSearchResult[]>([]);
   const [placeSearchMessage, setPlaceSearchMessage] = useState<string | null>(null);
+  const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [isPlaceSearching, setIsPlaceSearching] = useState(false);
   const [hasUsedPlaceSearch, setHasUsedPlaceSearch] = useState(false);
   const placeSearchCache = useRef(new Map<string, PlaceSearchResult[]>());
   const placeSearchInFlight = useRef(false);
 
   useEffect(() => {
-    const urlLocation = getUrlLocation();
+    const sharedParkingPoint = findSharedParkingPoint(window.location.search, parkingPoints);
+    if (sharedParkingPoint) {
+      applyReferenceLocation(
+        {
+          latitude: sharedParkingPoint.latitude,
+          longitude: sharedParkingPoint.longitude,
+        },
+        "located",
+        undefined,
+        sharedParkingPoint.id,
+      );
+      return;
+    }
+
+    const urlLocation = parseUrlLocation(window.location.search);
     if (urlLocation) {
       applyReferenceLocation(urlLocation, "located");
       return;
@@ -94,8 +105,9 @@ export default function CycleParkingFinder() {
     location: UserLocation,
     status: Extract<LocationState["status"], "located" | "searched">,
     label?: string,
+    selectedParkingId?: string,
   ) {
-    setSelectedId(null);
+    setSelectedId(selectedParkingId ?? null);
 
     if (status === "located" && isFarFromNearestParking(parkingPoints, location)) {
       setLocationState({
@@ -228,6 +240,18 @@ export default function CycleParkingFinder() {
     applyReferenceLocation(result.location, "searched", result.name.split(",")[0] ?? result.name);
   }
 
+  async function copyParkingLink(event: MouseEvent<HTMLButtonElement>, point: ParkingPoint) {
+    event.stopPropagation();
+    const link = buildParkingShareUrl(window.location.origin, window.location.pathname, point.id);
+
+    if (await copyTextToClipboard(link)) {
+      setShareMessage(`Link copied for ${point.name}.`);
+      return;
+    }
+
+    setShareMessage("Could not copy link.");
+  }
+
   return (
     <main className="app-shell">
       <section className="map-pane" aria-label="Cycle parking map">
@@ -323,9 +347,15 @@ export default function CycleParkingFinder() {
           </div>
         ) : null}
 
+        {shareMessage ? (
+          <div className="parking-share-message" role="status">
+            {shareMessage}
+          </div>
+        ) : null}
+
         <ol className="parking-list" aria-label="Nearby cycle parking locations">
           {closestPoints.map((point, index) => (
-            <li key={point.id}>
+            <li className="parking-list-item" key={point.id}>
               <button
                 className={[
                   "parking-row",
@@ -345,7 +375,16 @@ export default function CycleParkingFinder() {
                     {formatDistance(point.distanceMeters)} away - {describeParkingPoint(point)}
                   </span>
                 </span>
-                <MapPin size={18} aria-hidden="true" />
+              </button>
+              <button
+                aria-label={`Copy link to ${point.name}`}
+                className="parking-share-button"
+                type="button"
+                onClick={(event) => {
+                  void copyParkingLink(event, point);
+                }}
+              >
+                <Share2 size={17} aria-hidden="true" />
               </button>
             </li>
           ))}
