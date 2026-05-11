@@ -190,11 +190,11 @@ a {
   grid-template-columns: minmax(0, 1fr) auto auto;
 }
 
-.place-search-form button {
-  background: var(--accent-soft);
-  border: 1px solid #acdcd3;
+.place-search-button {
+  background: var(--text);
+  border: 1px solid var(--text);
   border-radius: 8px;
-  color: var(--accent-strong);
+  color: white;
   font-size: 0.9rem;
   font-weight: 760;
   min-height: 46px;
@@ -204,12 +204,18 @@ a {
     border-color 160ms ease;
 }
 
-.place-search-form button:not(:disabled):hover {
-  background: #bee9df;
-  border-color: var(--accent);
+.place-search-button:not(:disabled):hover,
+.place-search-button:not(:disabled):focus-visible {
+  background: #23332f;
+  border-color: #23332f;
 }
 
-.place-search-form button:disabled {
+.place-search-button:not(:disabled):active {
+  background: #0a1411;
+  border-color: #0a1411;
+}
+
+.place-search-button:disabled {
   background: #e9efec;
   border-color: #d8e3de;
   color: #718079;

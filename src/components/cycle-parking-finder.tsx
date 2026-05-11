@@ -282,7 +282,11 @@ export default function CycleParkingFinder() {
               )}
               {locationState.status === "locating" ? "Locating" : "Use my location"}
             </button>
-            <button type="submit" disabled={isPlaceSearching || placeQuery.trim().length === 0}>
+            <button
+              className="place-search-button"
+              type="submit"
+              disabled={isPlaceSearching || placeQuery.trim().length === 0}
+            >
               {isPlaceSearching ? "Searching" : "Search"}
             </button>
           </form>
