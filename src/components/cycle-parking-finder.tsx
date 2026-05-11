@@ -110,6 +110,7 @@ export default function CycleParkingFinder() {
   }, [nearbyPoints, query]);
 
   const nearestPoint = nearbyPoints[0] ?? null;
+  const nearestHighlightedPoints = nearbyPoints.slice(0, 3);
   const explicitSelectedPoint =
     selectedId !== null ? (nearbyPoints.find((point) => point.id === selectedId) ?? null) : null;
   const selectedPoint = explicitSelectedPoint ?? nearestPoint;
@@ -261,6 +262,7 @@ export default function CycleParkingFinder() {
           userLocation={locationState.location}
           selectedPoint={explicitSelectedPoint}
           nearestPoint={nearestPoint}
+          nearestHighlightedPoints={nearestHighlightedPoints}
           onSelectPoint={setSelectedId}
         />
       </section>
@@ -411,14 +413,19 @@ export default function CycleParkingFinder() {
         ) : null}
 
         <footer className="attribution">
-          <span>{cycleParkingDataset.metadata.attribution}</span>
-          <a href={cycleParkingDataset.metadata.licenceUrl}>Open Government Licence v3.0</a>
-          {hasUsedPlaceSearch ? (
-            <span>
-              Place search by <a href="https://nominatim.openstreetmap.org/">Nominatim</a> using
-              OpenStreetMap data.
-            </span>
-          ) : null}
+          <details>
+            <summary>View attributions</summary>
+            <div className="attribution-details">
+              <span>{cycleParkingDataset.metadata.attribution}</span>
+              <a href={cycleParkingDataset.metadata.licenceUrl}>Open Government Licence v3.0</a>
+              {hasUsedPlaceSearch ? (
+                <span>
+                  Place search by <a href="https://nominatim.openstreetmap.org/">Nominatim</a> using
+                  OpenStreetMap data.
+                </span>
+              ) : null}
+            </div>
+          </details>
         </footer>
       </aside>
     </main>

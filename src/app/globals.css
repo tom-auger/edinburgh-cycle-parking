@@ -442,11 +442,26 @@ a {
 .attribution {
   border-top: 1px solid var(--subtle);
   color: var(--muted);
-  display: grid;
   font-size: 0.75rem;
-  gap: 0.35rem;
   line-height: 1.35;
   padding-top: 0.75rem;
+}
+
+.attribution summary {
+  color: var(--accent-strong);
+  cursor: pointer;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.attribution summary:hover {
+  text-decoration: underline;
+}
+
+.attribution-details {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
 }
 
 .attribution a {
@@ -487,10 +502,22 @@ a {
   border: 7px solid var(--accent);
 }
 
-.parking-marker-nearest span {
+.parking-marker-rank-1 span {
+  background: #22c55e;
+  border: 3px solid white;
+  color: #052e16;
+}
+
+.parking-marker-rank-2 span {
   background: #f2b84b;
   border: 3px solid white;
   color: #351f04;
+}
+
+.parking-marker-rank-3 span {
+  background: #38bdf8;
+  border: 3px solid white;
+  color: #082f49;
 }
 
 .parking-marker-selected span {
