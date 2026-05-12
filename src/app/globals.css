@@ -101,6 +101,8 @@ a {
 .app-shell {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 430px;
+  height: 100vh;
+  height: 100svh;
   height: 100dvh;
   min-height: 680px;
   overflow: hidden;
@@ -120,6 +122,7 @@ a {
   min-width: 0;
   overflow: auto;
   padding: 1.25rem;
+  -webkit-overflow-scrolling: touch;
   z-index: 500;
 }
 
@@ -633,6 +636,8 @@ a {
 @media (max-width: 820px) {
   .app-shell {
     display: block;
+    height: 100vh;
+    height: 100svh;
     height: 100dvh;
     min-height: 0;
     overflow: hidden;
@@ -650,9 +655,11 @@ a {
     box-shadow: var(--shadow);
     gap: 0.75rem;
     left: 0.65rem;
+    max-height: 54vh;
+    max-height: 54svh;
     max-height: 54dvh;
     overflow: auto;
-    padding: 0.9rem;
+    padding: 0.9rem 0.9rem max(0.9rem, env(safe-area-inset-bottom));
     position: absolute;
     right: 0.65rem;
   }
@@ -696,12 +703,33 @@ a {
 
 @media (max-width: 460px) {
   .place-search-form {
-    grid-template-columns: minmax(0, 1fr) minmax(132px, 0.75fr);
+    grid-template-columns: minmax(0, 1fr) minmax(7rem, 0.5fr);
+  }
+
+  .place-search-form .search-box {
+    grid-column: 1 / -1;
   }
 
   .place-search-form .secondary-location-button {
-    grid-column: 1 / -1;
-    min-height: 38px;
+    grid-column: auto;
+  }
+
+  .place-search-button,
+  .secondary-location-button {
+    min-height: 40px;
+    padding-inline: 0.65rem;
+  }
+}
+
+@media (max-width: 340px) {
+  .place-search-form {
+    grid-template-columns: 1fr;
+  }
+
+  .place-search-form .search-box,
+  .place-search-form .secondary-location-button,
+  .place-search-button {
+    grid-column: 1;
   }
 }
 
