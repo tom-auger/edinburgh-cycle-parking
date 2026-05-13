@@ -52,6 +52,7 @@ const parkingPoints = cycleParkingDataset.points as ParkingPoint[];
 const maxPlaceSearchCacheEntries = 12;
 const closestParkingResultCount = 8;
 const copiedMessageDurationMs = 1_800;
+const defaultLocale = "en-GB";
 
 type LocationState =
   | { status: "fallback"; location: UserLocation }
@@ -93,6 +94,7 @@ export default function CycleParkingFinder() {
   const [isPlaceSearching, setIsPlaceSearching] = useState(false);
   const [hasUsedPlaceSearch, setHasUsedPlaceSearch] = useState(false);
   const [isAttributionModalOpen, setIsAttributionModalOpen] = useState(false);
+  const [numberLocale, setNumberLocale] = useState(defaultLocale);
   const placeSearchCache = useRef(new Map<string, PlaceSearchResult[]>());
   const directionsCache = useRef(new Map<string, CycleRoute>());
   const placeSearchInFlight = useRef(false);
@@ -101,6 +103,8 @@ export default function CycleParkingFinder() {
   const attributionDialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
+    setNumberLocale(navigator.language || defaultLocale);
+
     const { referenceLocation, selectedParkingId } = parseShareLinkState(
       window.location.search,
       parkingPoints,
@@ -153,6 +157,10 @@ export default function CycleParkingFinder() {
   const closestPoints = useMemo(
     () => nearbyPoints.slice(0, closestParkingResultCount),
     [nearbyPoints],
+  );
+  const formattedParkingLocationCount = useMemo(
+    () => cycleParkingDataset.metadata.recordCount.toLocaleString(numberLocale),
+    [numberLocale],
   );
 
   const nearestPoint = nearbyPoints[0] ?? null;
@@ -582,7 +590,7 @@ export default function CycleParkingFinder() {
               </div>
               <div>
                 <h1>Edinburgh Cycle Parking</h1>
-                <p>{cycleParkingDataset.metadata.recordCount} locations</p>
+                <p>{formattedParkingLocationCount} parking locations</p>
               </div>
             </header>
 
