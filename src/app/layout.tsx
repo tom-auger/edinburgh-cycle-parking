@@ -4,9 +4,42 @@ import PwaInstallPrompt from "@/components/pwa-install-prompt";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
+const siteUrl = "https://tom-auger.github.io";
+const sitePath = "/edinburgh-cycle-parking";
+const siteTitle = "Edinburgh Cycle Parking";
+const siteDescription = "Find nearby cycle parking spaces across Edinburgh.";
+const socialImage = `${sitePath}/og-image.png`;
+
 export const metadata: Metadata = {
-  title: "Edinburgh Cycle Parking",
-  description: "Find nearby cycle parking spaces across Edinburgh.",
+  metadataBase: new URL(siteUrl),
+  applicationName: siteTitle,
+  title: siteTitle,
+  description: siteDescription,
+  alternates: {
+    canonical: sitePath,
+  },
+  openGraph: {
+    title: siteTitle,
+    description: siteDescription,
+    url: sitePath,
+    siteName: siteTitle,
+    images: [
+      {
+        url: socialImage,
+        width: 1200,
+        height: 630,
+        alt: "Edinburgh Cycle Parking map preview",
+      },
+    ],
+    locale: "en_GB",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTitle,
+    description: siteDescription,
+    images: [socialImage],
+  },
 };
 
 export const viewport: Viewport = {
