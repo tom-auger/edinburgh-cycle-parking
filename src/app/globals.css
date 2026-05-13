@@ -122,6 +122,14 @@ a {
   overflow: hidden;
 }
 
+.parking-popup:has(.parking-popup-details-count-4) {
+  min-width: 240px;
+}
+
+.parking-popup-details-count-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .parking-popup-detail {
   align-items: center;
   border-right: 1px solid var(--subtle);
@@ -153,8 +161,9 @@ a {
   font-weight: 740;
   line-height: 1.18;
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   text-align: center;
+  word-break: normal;
 }
 
 .parking-popup-detail-icon {

@@ -175,41 +175,35 @@ describe("geo utilities", () => {
         value: "Not listed",
       },
     ]);
-    expect(unknown.details[0]).toEqual({
-      icon: "parking",
-      label: "Spaces",
-      tone: "neutral",
-      value: "Not listed",
-    });
-    expect(unknown.details[0]?.emphasis).toBeUndefined();
+    expect(unknown.details).toEqual([]);
   });
 
   it("groups popup stand types into icon categories", () => {
-    expect(getParkingPopupDetails(parkingPoint({ bicycle_pa: "wide_stands" })).details[1]).toEqual({
+    expect(getParkingPopupDetails(parkingPoint({ bicycle_pa: "wide_stands" })).details[0]).toEqual({
       icon: "stand",
       label: "Type",
       tone: "teal",
       value: "Wide Stands",
     });
-    expect(getParkingPopupDetails(parkingPoint({ bicycle_pa: "rack" })).details[1]).toEqual({
+    expect(getParkingPopupDetails(parkingPoint({ bicycle_pa: "rack" })).details[0]).toEqual({
       icon: "parking",
       label: "Type",
       tone: "teal",
       value: "Rack",
     });
-    expect(getParkingPopupDetails(parkingPoint({ bicycle_pa: "shed" })).details[1]).toEqual({
+    expect(getParkingPopupDetails(parkingPoint({ bicycle_pa: "shed" })).details[0]).toEqual({
       icon: "storage",
       label: "Type",
       tone: "green",
       value: "Shed",
     });
-    expect(getParkingPopupDetails(parkingPoint({ bicycle_pa: "wall_loops" })).details[1]).toEqual({
+    expect(getParkingPopupDetails(parkingPoint({ bicycle_pa: "wall_loops" })).details[0]).toEqual({
       icon: "fixture",
       label: "Type",
       tone: "amber",
       value: "Wall Loops",
     });
-    expect(getParkingPopupDetails(parkingPoint({ bicycle_pa: "artistic" })).details[1]).toEqual({
+    expect(getParkingPopupDetails(parkingPoint({ bicycle_pa: "artistic" })).details[0]).toEqual({
       icon: "unknown",
       label: "Type",
       tone: "neutral",
@@ -218,25 +212,25 @@ describe("geo utilities", () => {
   });
 
   it("groups popup cover and access details", () => {
-    expect(
-      getParkingPopupDetails(parkingPoint({ covered: "yes", access: "yes" })).details.slice(2),
-    ).toEqual([
-      {
-        icon: "covered",
-        label: "Cover",
-        tone: "green",
-        value: "Covered",
-      },
-      {
-        icon: "access-open",
-        label: "Access",
-        tone: "green",
-        value: "Public access",
-      },
-    ]);
+    expect(getParkingPopupDetails(parkingPoint({ covered: "yes", access: "yes" })).details).toEqual(
+      [
+        {
+          icon: "covered",
+          label: "Cover",
+          tone: "green",
+          value: "Covered",
+        },
+        {
+          icon: "access-open",
+          label: "Access",
+          tone: "green",
+          value: "Public access",
+        },
+      ],
+    );
 
     expect(
-      getParkingPopupDetails(parkingPoint({ covered: "no", access: "private" })).details.slice(2),
+      getParkingPopupDetails(parkingPoint({ covered: "no", access: "private" })).details,
     ).toEqual([
       {
         icon: "not-covered",
@@ -252,31 +246,26 @@ describe("geo utilities", () => {
       },
     ]);
 
-    expect(getParkingPopupDetails(parkingPoint({ access: "customers" })).details[3]).toEqual({
+    expect(getParkingPopupDetails(parkingPoint({ access: "customers" })).details[0]).toEqual({
       icon: "customer",
       label: "Access",
       tone: "amber",
       value: "Customers",
     });
-    expect(getParkingPopupDetails(parkingPoint({ access: "university" })).details[3]).toEqual({
+    expect(getParkingPopupDetails(parkingPoint({ access: "university" })).details[0]).toEqual({
       icon: "university",
       label: "Access",
       tone: "teal",
       value: "University",
     });
-    expect(getParkingPopupDetails(parkingPoint({ access: "permissive" })).details[3]).toEqual({
+    expect(getParkingPopupDetails(parkingPoint({ access: "permissive" })).details[0]).toEqual({
       icon: "access-open",
       label: "Access",
       tone: "green",
       value: "Permissive",
     });
-    expect(getParkingPopupDetails(parkingPoint({ access: " " })).details).toHaveLength(3);
-    expect(getParkingPopupDetails(parkingPoint({ access: "unknown" })).details[3]).toEqual({
-      icon: "unknown",
-      label: "Access",
-      tone: "neutral",
-      value: "Unknown",
-    });
+    expect(getParkingPopupDetails(parkingPoint({ access: " " })).details).toHaveLength(0);
+    expect(getParkingPopupDetails(parkingPoint({ access: "unknown" })).details).toHaveLength(0);
   });
 
   it("summarizes populated parking details", () => {

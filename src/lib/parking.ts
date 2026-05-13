@@ -97,28 +97,29 @@ function getCapacityTone(value: string | number | boolean | null | undefined): P
 
 function formatCapacityDetail(
   value: string | number | boolean | null | undefined,
-): ParkingPopupDetail {
+): ParkingPopupDetail | null {
   const hasCapacity = typeof value === "number" && value > 0;
 
+  if (!hasCapacity) {
+    return null;
+  }
+
   return {
-    emphasis: hasCapacity ? String(value) : undefined,
+    emphasis: String(value),
     icon: "parking",
     label: "Spaces",
     tone: getCapacityTone(value),
-    value: hasCapacity ? "Spaces" : formatCapacity(value),
+    value: "Spaces",
   };
 }
 
-function formatStandType(value: string | number | boolean | null | undefined): ParkingPopupDetail {
+function formatStandType(
+  value: string | number | boolean | null | undefined,
+): ParkingPopupDetail | null {
   const type = normalizeText(value);
 
   if (!type) {
-    return {
-      icon: "unknown",
-      label: "Type",
-      tone: "neutral",
-      value: "Not listed",
-    };
+    return null;
   }
 
   if (["stands", "wide_stands", "staple", "hoop", "post_hoop"].includes(type)) {
@@ -171,7 +172,7 @@ function formatTypeLabel(value: string) {
 
 function formatCoverDetail(
   value: string | number | boolean | null | undefined,
-): ParkingPopupDetail {
+): ParkingPopupDetail | null {
   if (value === "yes") {
     return {
       icon: "covered",
@@ -190,12 +191,7 @@ function formatCoverDetail(
     };
   }
 
-  return {
-    icon: "unknown",
-    label: "Cover",
-    tone: "neutral",
-    value: "Not listed",
-  };
+  return null;
 }
 
 function formatAccessDetail(
@@ -204,6 +200,10 @@ function formatAccessDetail(
   const access = normalizeText(value);
 
   if (!access) {
+    return null;
+  }
+
+  if (access === "unknown") {
     return null;
   }
 

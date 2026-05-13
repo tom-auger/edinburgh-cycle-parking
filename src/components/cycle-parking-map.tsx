@@ -580,7 +580,10 @@ export default function CycleParkingMap({
                     </span>
                   ))}
                 </div>
-                <div className="parking-popup-details" aria-label="Parking details">
+                <div
+                  className={`parking-popup-details parking-popup-details-count-${popupDetails.details.length}`}
+                  aria-label="Parking details"
+                >
                   {popupDetails.details.map((detail) => (
                     <div
                       aria-label={`${detail.label}: ${detail.value}`}
