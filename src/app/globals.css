@@ -3,6 +3,8 @@
   --background: #f6f8f5;
   --surface: #ffffff;
   --surface-strong: #eef7f2;
+  --surface-muted: #fbfcfb;
+  --surface-neutral: #f8faf9;
   --text: #10201c;
   --muted: #5d6f69;
   --subtle: #dbe6e0;
@@ -10,7 +12,90 @@
   --accent-strong: #0b5c55;
   --accent-soft: #cfeee7;
   --warning: #a15c11;
+  --separator: rgb(219 230 224 / 84%);
+  --hover-soft: rgb(15 118 110 / 8%);
+  --selected-surface: #eff6ff;
+  --selected-border: #2563eb;
+  --selected-text: #1d4ed8;
+  --selected-soft: rgb(37 99 235 / 12%);
+  --primary-button-bg: #10201c;
+  --primary-button-hover: #23332f;
+  --primary-button-active: #0a1411;
+  --primary-button-text: #ffffff;
+  --control-disabled-bg: #e9efec;
+  --control-disabled-border: #d8e3de;
+  --control-disabled-text: #718079;
+  --map-loading-bg: #e9f0ec;
+  --marker-fill: #ffffff;
+  --marker-border: #ffffff;
+  --marker-shadow: rgb(16 32 28 / 24%);
+  --pin-accent: #0f766e;
+  --pin-selected-text: #ffffff;
+  --ranked-pin-bg: #ffffff;
+  --ranked-pin-border: #0f766e;
+  --ranked-pin-text: #0b5c55;
+  --rank-list-bg: #cfeee7;
+  --rank-list-border: #99d9cf;
+  --rank-list-text: #0b5c55;
+  --rank-1-bg: #16a34a;
+  --rank-2-bg: #4ade80;
+  --rank-3-bg: #86efac;
+  --rank-text: #052e16;
+  --tooltip-bg: #052e16;
+  --tooltip-text: #f0fdf4;
+  --popup-positive-text: #14532d;
+  --popup-positive-border: #86efac;
   --shadow: 0 20px 50px rgb(18 38 31 / 14%);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0f1715;
+  --surface: #17211e;
+  --surface-strong: #20302b;
+  --surface-muted: #1a2622;
+  --surface-neutral: #151f1c;
+  --text: #eef7f2;
+  --muted: #9fb3ad;
+  --subtle: #31433d;
+  --accent: #5eead4;
+  --accent-strong: #99f6e4;
+  --accent-soft: rgb(94 234 212 / 14%);
+  --warning: #fbbf24;
+  --separator: rgb(49 67 61 / 84%);
+  --hover-soft: rgb(94 234 212 / 12%);
+  --selected-surface: rgb(37 99 235 / 18%);
+  --selected-border: #60a5fa;
+  --selected-text: #bfdbfe;
+  --selected-soft: rgb(96 165 250 / 18%);
+  --primary-button-bg: #5eead4;
+  --primary-button-hover: #99f6e4;
+  --primary-button-active: #2dd4bf;
+  --primary-button-text: #0f1715;
+  --control-disabled-bg: #24312d;
+  --control-disabled-border: #31433d;
+  --control-disabled-text: #73847e;
+  --map-loading-bg: #111c18;
+  --marker-fill: #d9fff6;
+  --marker-border: #d9fff6;
+  --marker-shadow: rgb(0 0 0 / 45%);
+  --pin-accent: #14b8a6;
+  --pin-selected-text: #ecfeff;
+  --ranked-pin-bg: #d9fff6;
+  --ranked-pin-border: #14b8a6;
+  --ranked-pin-text: #0f766e;
+  --rank-list-bg: #1c332f;
+  --rank-list-border: #2f6f66;
+  --rank-list-text: #b7dcd5;
+  --rank-1-bg: #115e59;
+  --rank-2-bg: #0f766e;
+  --rank-3-bg: #0d9488;
+  --rank-text: #ecfeff;
+  --tooltip-bg: #e6fff8;
+  --tooltip-text: #0f1715;
+  --popup-positive-text: #99f6e4;
+  --popup-positive-border: #2f6f66;
+  --shadow: 0 20px 50px rgb(0 0 0 / 34%);
 }
 
 * {
@@ -54,6 +139,60 @@ a {
   width: 100%;
   height: 100%;
   font-family: inherit;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.leaflet-popup-content-wrapper {
+  border: 1px solid var(--subtle);
+  box-shadow: var(--shadow);
+}
+
+.leaflet-control-zoom a,
+.leaflet-control-attribution {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.leaflet-control-zoom a {
+  border-bottom-color: var(--subtle);
+}
+
+.leaflet-control-zoom a:hover,
+.leaflet-control-zoom a:focus {
+  background: var(--surface-strong);
+  color: var(--text);
+}
+
+.leaflet-control-attribution a {
+  color: var(--accent-strong);
+}
+
+.leaflet-control-attribution {
+  border: 1px solid var(--subtle);
+  border-radius: 6px 0 0;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 16%);
+  font-size: 0.68rem;
+  line-height: 1.2;
+  padding: 0.18rem 0.35rem;
+}
+
+.bike-map-dark .leaflet-control-attribution {
+  background: rgb(15 23 21 / 88%);
+  border-color: rgb(153 246 228 / 28%);
+  color: #dce8e3;
+}
+
+.bike-map-dark .leaflet-control-attribution a {
+  color: #99f6e4;
+}
+
+.bike-map-dark .leaflet-tile {
+  filter: brightness(0.62) contrast(1.22) saturate(0.78) invert(1) hue-rotate(180deg);
 }
 
 .parking-popup {
@@ -186,8 +325,8 @@ a {
 
 .parking-popup-tone-green {
   background: #dcfce7;
-  border-color: #86efac;
-  color: #14532d;
+  border-color: var(--popup-positive-border);
+  color: var(--popup-positive-text);
 }
 
 .parking-popup-tone-teal {
@@ -209,7 +348,7 @@ a {
 }
 
 .parking-popup-tone-neutral {
-  background: #f8faf9;
+  background: var(--surface-neutral);
   border-color: var(--subtle);
   color: var(--muted);
 }
@@ -226,7 +365,7 @@ a {
 .parking-popup-detail.parking-popup-tone-muted,
 .parking-popup-detail.parking-popup-tone-neutral,
 .parking-popup-detail.parking-popup-tone-restricted {
-  background: #ffffff;
+  background: var(--surface);
 }
 
 .parking-popup-actions {
@@ -264,10 +403,10 @@ a {
 }
 
 .parking-popup .parking-popup-share-feedback {
-  background: #052e16;
+  background: var(--tooltip-bg);
   border-radius: 6px;
   bottom: calc(100% + 0.35rem);
-  color: #f0fdf4;
+  color: var(--tooltip-text);
   display: block;
   font-size: 0.68rem;
   font-weight: 800;
@@ -307,10 +446,23 @@ a {
   z-index: 500;
 }
 
+.control-pane,
+.directions-mode,
+.parking-list {
+  scrollbar-width: none;
+}
+
+.control-pane::-webkit-scrollbar,
+.directions-mode::-webkit-scrollbar,
+.parking-list::-webkit-scrollbar {
+  display: none;
+}
+
 .app-header {
   align-items: center;
   display: flex;
   gap: 0.85rem;
+  position: relative;
 }
 
 .brand-mark {
@@ -345,6 +497,90 @@ a {
   margin: 0.25rem 0 0;
 }
 
+.settings-menu {
+  margin-left: auto;
+  position: relative;
+}
+
+.settings-trigger {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--subtle);
+  border-radius: 8px;
+  color: var(--accent-strong);
+  display: grid;
+  height: 2.4rem;
+  padding: 0;
+  place-items: center;
+  width: 2.4rem;
+}
+
+.settings-trigger:hover,
+.settings-trigger:focus-visible,
+.settings-trigger[aria-expanded="true"] {
+  background: var(--surface-strong);
+  border-color: var(--accent);
+}
+
+.settings-popover {
+  background: var(--surface);
+  border: 1px solid var(--subtle);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 0.5rem;
+  min-width: 14rem;
+  padding: 0.65rem;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  z-index: 700;
+}
+
+.settings-label {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 760;
+  line-height: 1;
+}
+
+.theme-options {
+  background: var(--surface-strong);
+  border: 1px solid var(--subtle);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.25rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 0.25rem;
+}
+
+.theme-options button {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--muted);
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: 760;
+  gap: 0.25rem;
+  justify-content: center;
+  min-height: 2rem;
+  padding: 0 0.35rem;
+}
+
+.theme-options button:hover,
+.theme-options button:focus-visible {
+  color: var(--text);
+}
+
+.theme-options button.selected {
+  background: var(--surface);
+  border-color: var(--accent);
+  color: var(--accent-strong);
+  box-shadow: 0 2px 8px rgb(16 32 28 / 10%);
+}
+
 .status-message {
   align-items: flex-start;
   border: 1px solid var(--subtle);
@@ -375,10 +611,10 @@ a {
 }
 
 .place-search-button {
-  background: var(--text);
-  border: 1px solid var(--text);
+  background: var(--primary-button-bg);
+  border: 1px solid var(--primary-button-bg);
   border-radius: 8px;
-  color: white;
+  color: var(--primary-button-text);
   font-size: 0.9rem;
   font-weight: 760;
   min-height: 46px;
@@ -390,19 +626,19 @@ a {
 
 .place-search-button:not(:disabled):hover,
 .place-search-button:not(:disabled):focus-visible {
-  background: #23332f;
-  border-color: #23332f;
+  background: var(--primary-button-hover);
+  border-color: var(--primary-button-hover);
 }
 
 .place-search-button:not(:disabled):active {
-  background: #0a1411;
-  border-color: #0a1411;
+  background: var(--primary-button-active);
+  border-color: var(--primary-button-active);
 }
 
 .place-search-button:disabled {
-  background: #e9efec;
-  border-color: #d8e3de;
-  color: #718079;
+  background: var(--control-disabled-bg);
+  border-color: var(--control-disabled-border);
+  color: var(--control-disabled-text);
   cursor: not-allowed;
 }
 
@@ -444,7 +680,7 @@ a {
 
 .place-results button {
   align-items: center;
-  background: #fbfcfb;
+  background: var(--surface-muted);
   border: 1px solid var(--subtle);
   border-radius: 8px;
   color: var(--text);
@@ -507,6 +743,7 @@ a {
 }
 
 .search-box input {
+  background: transparent;
   border: 0;
   color: var(--text);
   flex: 1;
@@ -530,7 +767,7 @@ a {
 
 .parking-list-item {
   align-items: stretch;
-  background: #fbfcfb;
+  background: var(--surface-muted);
   border: 1px solid var(--subtle);
   border-radius: 8px;
   display: grid;
@@ -563,9 +800,9 @@ a {
 }
 
 .parking-list-item:has(.parking-row.selected) {
-  background: #eff6ff;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 1px rgb(37 99 235 / 18%);
+  background: var(--selected-surface);
+  border-color: var(--selected-border);
+  box-shadow: 0 0 0 1px var(--selected-soft);
 }
 
 .parking-list-item:has(.parking-row.closest) {
@@ -574,15 +811,16 @@ a {
 }
 
 .parking-list-item:has(.parking-row.closest.selected) {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 1px rgb(37 99 235 / 18%);
+  border-color: var(--selected-border);
+  box-shadow: 0 0 0 1px var(--selected-soft);
 }
 
 .rank {
   align-items: center;
-  background: var(--accent-soft);
+  background: var(--rank-list-bg);
   border-radius: 8px;
-  color: var(--accent-strong);
+  box-shadow: 0 0 0 1px var(--rank-list-border);
+  color: var(--rank-list-text);
   display: grid;
   font-size: 0.82rem;
   font-weight: 800;
@@ -592,18 +830,24 @@ a {
 }
 
 .rank-1 {
-  background: #22c55e;
-  color: #052e16;
+  background: var(--rank-1-bg);
+  color: var(--rank-text);
 }
 
 .rank-2 {
-  background: #86efac;
-  color: #052e16;
+  background: var(--rank-2-bg);
+  color: var(--rank-text);
 }
 
 .rank-3 {
-  background: #bbf7d0;
-  color: #052e16;
+  background: var(--rank-3-bg);
+  color: var(--rank-text);
+}
+
+.rank-1,
+.rank-2,
+.rank-3 {
+  box-shadow: 0 0 0 1px var(--marker-border);
 }
 
 .parking-row-copy {
@@ -638,19 +882,19 @@ a {
 }
 
 .parking-directions-button {
-  border-left: 1px solid rgb(219 230 224 / 80%);
+  border-left: 1px solid var(--separator);
 }
 
 .parking-directions-button.active {
-  background: rgb(37 99 235 / 10%);
-  color: #1d4ed8;
+  background: var(--selected-soft);
+  color: var(--selected-text);
 }
 
 .parking-directions-button:hover,
 .parking-directions-button:focus-visible,
 .parking-share-button:hover,
 .parking-share-button:focus-visible {
-  background: rgb(15 118 110 / 8%);
+  background: var(--hover-soft);
   color: var(--accent-strong);
 }
 
@@ -661,9 +905,9 @@ a {
 }
 
 .parking-share-tooltip {
-  background: #052e16;
+  background: var(--tooltip-bg);
   border-radius: 6px;
-  color: #f0fdf4;
+  color: var(--tooltip-text);
   font-size: 0.72rem;
   font-weight: 800;
   line-height: 1;
@@ -809,7 +1053,7 @@ a {
 
 .directions-list li {
   align-items: center;
-  border-bottom: 1px solid rgb(219 230 224 / 88%);
+  border-bottom: 1px solid var(--separator);
   display: grid;
   gap: 0.75rem;
   grid-template-columns: 2.4rem minmax(0, 1fr) auto;
@@ -850,9 +1094,9 @@ a {
 }
 
 .directions-list li:first-child .directions-step-number {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgb(37 99 235 / 12%);
-  color: #1d4ed8;
+  border-color: var(--selected-border);
+  box-shadow: 0 0 0 3px var(--selected-soft);
+  color: var(--selected-text);
 }
 
 .directions-step-text {
@@ -863,7 +1107,7 @@ a {
 }
 
 .directions-step-distance {
-  background: #f1f5f3;
+  background: var(--surface-strong);
   border-radius: 999px;
   color: var(--muted);
   font-size: 0.78rem;
@@ -882,7 +1126,7 @@ a {
 
 .directions-attribution a {
   align-items: center;
-  color: #1d4ed8;
+  color: var(--selected-text);
   display: inline-flex;
   gap: 0.25rem;
   font-weight: 760;
@@ -990,7 +1234,7 @@ a {
 
 .map-loading {
   align-items: center;
-  background: #e9f0ec;
+  background: var(--map-loading-bg);
   color: var(--muted);
   display: grid;
   height: 100%;
@@ -1004,7 +1248,7 @@ a {
   border-radius: 8px;
   bottom: 1rem;
   box-shadow: 0 10px 24px rgb(16 32 28 / 18%);
-  color: #ffffff;
+  color: var(--primary-button-text);
   display: inline-flex;
   font-size: 0.9rem;
   font-weight: 780;
@@ -1030,7 +1274,7 @@ a {
 .parking-marker span {
   align-items: center;
   border-radius: 999px;
-  box-shadow: 0 8px 20px rgb(16 32 28 / 24%);
+  box-shadow: 0 8px 20px var(--marker-shadow);
   display: grid;
   font-size: 0.72rem;
   font-weight: 860;
@@ -1040,55 +1284,68 @@ a {
 }
 
 .parking-marker-default span {
-  background: #ffffff;
-  border: 7px solid var(--accent);
+  background: var(--marker-fill);
+  border: 7px solid var(--pin-accent);
 }
 
 .parking-marker-ranked span {
-  background: #ffffff;
-  border: 3px solid var(--accent);
-  color: var(--accent-strong);
-  font-size: 0.68rem;
+  background: var(--ranked-pin-bg);
+  border: 3px solid var(--ranked-pin-border);
+  color: var(--ranked-pin-text);
+  font-size: 0.74rem;
+  font-weight: 900;
 }
 
 .parking-marker-rank-1 span {
-  background: #22c55e;
-  border: 3px solid white;
-  color: #052e16;
+  background: var(--rank-1-bg);
+  border: 3px solid var(--marker-border);
+  box-shadow:
+    0 0 0 3px var(--rank-1-bg),
+    0 8px 20px var(--marker-shadow);
+  color: var(--rank-text);
+  font-size: 0.76rem;
 }
 
 .parking-marker-rank-2 span {
-  background: #86efac;
-  border: 3px solid white;
-  color: #052e16;
+  background: var(--rank-2-bg);
+  border: 3px solid var(--marker-border);
+  box-shadow:
+    0 0 0 2px var(--rank-2-bg),
+    0 8px 20px var(--marker-shadow);
+  color: var(--rank-text);
+  font-size: 0.72rem;
 }
 
 .parking-marker-rank-3 span {
-  background: #bbf7d0;
-  border: 3px solid white;
-  color: #052e16;
+  background: var(--rank-3-bg);
+  border: 3px solid var(--marker-border);
+  box-shadow:
+    0 0 0 2px var(--rank-3-bg),
+    0 8px 20px var(--marker-shadow);
+  color: var(--rank-text);
+  font-size: 0.72rem;
 }
 
 .parking-marker-selected span {
-  background: var(--accent);
-  border: 3px solid white;
-  color: white;
+  background: var(--pin-accent);
+  border: 3px solid var(--marker-border);
+  color: var(--pin-selected-text);
 }
 
 .parking-marker-selected-ranked span {
-  background: var(--accent);
-  border: 3px solid white;
+  background: var(--pin-accent);
+  border: 3px solid var(--marker-border);
   box-shadow:
     0 0 0 3px rgb(15 118 110 / 24%),
-    0 8px 20px rgb(16 32 28 / 24%);
-  color: white;
+    0 8px 20px var(--marker-shadow);
+  color: var(--pin-selected-text);
 }
 
 .start-marker span {
   background: #2563eb;
-  border: 3px solid white;
+  border: 3px solid var(--marker-border);
   border-radius: 999px 999px 999px 0;
-  box-shadow: 0 10px 22px rgb(16 32 28 / 24%);
+  box-shadow: 0 10px 22px var(--marker-shadow);
   display: block;
   height: 30px;
   position: relative;
@@ -1097,7 +1354,7 @@ a {
 }
 
 .start-marker span::after {
-  background: white;
+  background: var(--marker-border);
   border-radius: 999px;
   content: "";
   height: 10px;
@@ -1109,12 +1366,12 @@ a {
 }
 
 .destination-marker span {
-  background: var(--accent);
-  border: 3px solid white;
+  background: var(--pin-accent);
+  border: 3px solid var(--marker-border);
   border-radius: 999px 999px 999px 0;
   box-shadow:
     0 0 0 3px rgb(15 118 110 / 22%),
-    0 12px 26px rgb(16 32 28 / 30%);
+    0 12px 26px var(--marker-shadow);
   display: block;
   height: 30px;
   position: relative;
@@ -1123,7 +1380,7 @@ a {
 }
 
 .destination-marker span::after {
-  background: white;
+  background: var(--marker-border);
   border-radius: 999px;
   content: "";
   height: 10px;
@@ -1185,6 +1442,12 @@ a {
   .pwa-install-button {
     bottom: calc(54dvh + 1rem);
     right: 0.85rem;
+  }
+
+  .leaflet-bottom.leaflet-right {
+    bottom: auto;
+    right: 0;
+    top: 0;
   }
 
   .app-header {

@@ -45,6 +45,7 @@ type CycleParkingMapProps = {
   route: CycleRoute | null;
   isDirectionsMode: boolean;
   copiedShareButton: { parkingId: string; source: "list" | "popup" } | null;
+  theme: "light" | "dark";
   onSelectPoint: (id: string) => void;
   onRequestDirections: (point: ParkingPoint) => void;
   onCopyParkingLink: (point: ParkingPoint) => void;
@@ -287,6 +288,18 @@ function AttributionPrefix() {
   return null;
 }
 
+function MapThemeClass({ theme }: { theme: "light" | "dark" }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const container = map.getContainer();
+    container.classList.toggle("bike-map-dark", theme === "dark");
+    container.classList.toggle("bike-map-light", theme === "light");
+  }, [map, theme]);
+
+  return null;
+}
+
 function getMapBounds(map: L.Map): ParkingMapBounds {
   const bounds = map.getBounds();
 
@@ -367,6 +380,7 @@ export default function CycleParkingMap({
   route,
   isDirectionsMode,
   copiedShareButton,
+  theme,
   onSelectPoint,
   onRequestDirections,
   onCopyParkingLink,
@@ -470,8 +484,14 @@ export default function CycleParkingMap({
   }, [route, selectedPoint]);
 
   return (
-    <MapContainer center={defaultCenter} zoom={13} scrollWheelZoom className="bike-map">
+    <MapContainer
+      center={defaultCenter}
+      zoom={13}
+      scrollWheelZoom
+      className={`bike-map bike-map-${theme}`}
+    >
       <AttributionPrefix />
+      <MapThemeClass theme={theme} />
       <MapViewportTracker onViewportChange={handleViewportChange} />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

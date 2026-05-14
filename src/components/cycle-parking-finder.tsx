@@ -7,10 +7,14 @@ import {
   ExternalLink,
   LocateFixed,
   MapPin,
+  Monitor,
+  Moon,
   Navigation,
   Route,
   Search,
+  Settings,
   Share2,
+  Sun,
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
@@ -53,6 +57,7 @@ const maxPlaceSearchCacheEntries = 12;
 const closestParkingResultCount = 8;
 const copiedMessageDurationMs = 1_800;
 const defaultLocale = "en-GB";
+const themeStorageKey = "cycle-parking-theme";
 
 type LocationState =
   | { status: "fallback"; location: UserLocation }
@@ -71,11 +76,35 @@ type DirectionsState =
   | { status: "error"; parkingId: string; message: string };
 
 type ShareSource = "list" | "popup";
+type ThemeMode = "system" | "light" | "dark";
+type ResolvedTheme = "light" | "dark";
 
 type CopiedShareButton = {
   parkingId: string;
   source: ShareSource;
 };
+
+const themeOptions: {
+  icon: typeof Monitor;
+  label: string;
+  mode: ThemeMode;
+}[] = [
+  { icon: Monitor, label: "System", mode: "system" },
+  { icon: Sun, label: "Light", mode: "light" },
+  { icon: Moon, label: "Dark", mode: "dark" },
+];
+
+function isThemeMode(value: string | null): value is ThemeMode {
+  return value === "system" || value === "light" || value === "dark";
+}
+
+function resolveTheme(mode: ThemeMode, prefersDark: boolean): ResolvedTheme {
+  if (mode === "system") {
+    return prefersDark ? "dark" : "light";
+  }
+
+  return mode;
+}
 
 async function copyTextToClipboard(text: string) {
   try {
@@ -101,13 +130,17 @@ export default function CycleParkingFinder() {
   const [isPlaceSearching, setIsPlaceSearching] = useState(false);
   const [hasUsedPlaceSearch, setHasUsedPlaceSearch] = useState(false);
   const [isAttributionModalOpen, setIsAttributionModalOpen] = useState(false);
+  const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
   const [numberLocale, setNumberLocale] = useState(defaultLocale);
+  const [themeMode, setThemeMode] = useState<ThemeMode>("system");
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
   const placeSearchCache = useRef(new Map<string, PlaceSearchResult[]>());
   const directionsCache = useRef(new Map<string, CycleRoute>());
   const placeSearchInFlight = useRef(false);
   const directionsRequestId = useRef(0);
   const copiedMessageTimeout = useRef<number | null>(null);
   const attributionDialog = useRef<HTMLDialogElement>(null);
+  const settingsMenu = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setNumberLocale(navigator.language || defaultLocale);
@@ -136,12 +169,73 @@ export default function CycleParkingFinder() {
   }, []);
 
   useEffect(() => {
+    const storedThemeMode = window.localStorage.getItem(themeStorageKey);
+
+    if (isThemeMode(storedThemeMode)) {
+      setThemeMode(storedThemeMode);
+    }
+  }, []);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+    function updateResolvedTheme() {
+      setResolvedTheme(resolveTheme(themeMode, mediaQuery.matches));
+    }
+
+    updateResolvedTheme();
+
+    if (themeMode !== "system") {
+      return;
+    }
+
+    mediaQuery.addEventListener("change", updateResolvedTheme);
+
+    return () => mediaQuery.removeEventListener("change", updateResolvedTheme);
+  }, [themeMode]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = resolvedTheme;
+    document.documentElement.style.colorScheme = resolvedTheme;
+  }, [resolvedTheme]);
+
+  useEffect(() => {
+    window.localStorage.setItem(themeStorageKey, themeMode);
+  }, [themeMode]);
+
+  useEffect(() => {
     return () => {
       if (copiedMessageTimeout.current !== null) {
         window.clearTimeout(copiedMessageTimeout.current);
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!isSettingsMenuOpen) {
+      return;
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      if (!settingsMenu.current?.contains(event.target as Node)) {
+        setIsSettingsMenuOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsSettingsMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isSettingsMenuOpen]);
 
   useEffect(() => {
     const dialog = attributionDialog.current;
@@ -420,6 +514,46 @@ export default function CycleParkingFinder() {
     await copyParkingLinkForPoint(point, "list");
   }
 
+  function chooseThemeMode(mode: ThemeMode) {
+    setThemeMode(mode);
+    setIsSettingsMenuOpen(false);
+  }
+
+  function renderThemeSettings() {
+    return (
+      <div className="settings-menu" ref={settingsMenu}>
+        <button
+          aria-expanded={isSettingsMenuOpen}
+          aria-label="Theme settings"
+          className="settings-trigger"
+          type="button"
+          onClick={() => setIsSettingsMenuOpen((isOpen) => !isOpen)}
+        >
+          <Settings size={18} aria-hidden="true" />
+        </button>
+        {isSettingsMenuOpen ? (
+          <div className="settings-popover" role="menu" aria-label="Theme settings">
+            <span className="settings-label">Theme</span>
+            <div className="theme-options" role="group" aria-label="Theme">
+              {themeOptions.map(({ icon: Icon, label, mode }) => (
+                <button
+                  aria-pressed={themeMode === mode}
+                  className={themeMode === mode ? "selected" : undefined}
+                  key={mode}
+                  type="button"
+                  onClick={() => chooseThemeMode(mode)}
+                >
+                  <Icon size={15} aria-hidden="true" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
   function renderAttributionFooter(className = "") {
     return (
       <footer className={["attribution", className].filter(Boolean).join(" ")}>
@@ -481,7 +615,7 @@ export default function CycleParkingFinder() {
   }
 
   return (
-    <main className="app-shell">
+    <main className="app-shell" data-theme={resolvedTheme}>
       <section className="map-pane" aria-label="Cycle parking map">
         <CycleParkingMap
           points={nearbyPoints}
@@ -492,6 +626,7 @@ export default function CycleParkingFinder() {
           route={activeRoute}
           isDirectionsMode={isDirectionsMode}
           copiedShareButton={copiedShareButton}
+          theme={resolvedTheme}
           onSelectPoint={selectParkingPoint}
           onRequestDirections={(point) => {
             void requestDirectionsToPoint(point);
@@ -599,6 +734,7 @@ export default function CycleParkingFinder() {
                 <h1>Edinburgh Cycle Parking</h1>
                 <p>{formattedParkingLocationCount} parking locations</p>
               </div>
+              {renderThemeSettings()}
             </header>
 
             <section className="reference-panel" aria-label="Search from">
