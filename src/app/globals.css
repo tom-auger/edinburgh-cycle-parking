@@ -591,6 +591,27 @@ a {
   box-shadow: 0 2px 8px rgb(16 32 28 / 10%);
 }
 
+.settings-action-button {
+  align-items: center;
+  background: var(--surface-strong);
+  border: 1px solid var(--subtle);
+  border-radius: 8px;
+  color: var(--accent-strong);
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 620;
+  gap: 0.4rem;
+  justify-content: flex-start;
+  min-height: 2.2rem;
+  padding: 0 0.6rem;
+}
+
+.settings-action-button:hover,
+.settings-action-button:focus-visible {
+  background: var(--surface);
+  border-color: var(--accent);
+}
+
 .status-message {
   align-items: flex-start;
   border: 1px solid var(--subtle);
@@ -783,11 +804,24 @@ a {
   flex: none;
 }
 
+.parking-list-context {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px #e4c6a5;
+  color: var(--warning);
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.3;
+  margin-bottom: 0.55rem;
+  padding: 0.55rem 0.65rem;
+}
+
 .parking-list-item {
   align-items: stretch;
   background: var(--surface-muted);
-  border: 1px solid var(--subtle);
+  border: 1px solid transparent;
   border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--subtle);
   display: grid;
   grid-template-columns: minmax(0, 1fr) 2.75rem 2.75rem;
   min-height: 66px;
@@ -796,7 +830,7 @@ a {
 
 .parking-list-item:hover {
   background: var(--surface-strong);
-  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .parking-row {
@@ -819,18 +853,16 @@ a {
 
 .parking-list-item:has(.parking-row.selected) {
   background: var(--selected-surface);
-  border-color: var(--selected-border);
-  box-shadow: 0 0 0 1px var(--selected-soft);
+  box-shadow: inset 0 0 0 1px var(--selected-border);
 }
 
 .parking-list-item:has(.parking-row.closest) {
   background: var(--surface-strong);
-  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .parking-list-item:has(.parking-row.closest.selected) {
-  border-color: var(--selected-border);
-  box-shadow: 0 0 0 1px var(--selected-soft);
+  box-shadow: inset 0 0 0 1px var(--selected-border);
 }
 
 .rank {
@@ -1259,29 +1291,6 @@ a {
   place-items: center;
 }
 
-.pwa-install-button {
-  align-items: center;
-  background: var(--accent);
-  border: 1px solid var(--accent-strong);
-  border-radius: 8px;
-  bottom: 1rem;
-  box-shadow: 0 10px 24px rgb(16 32 28 / 18%);
-  color: var(--primary-button-text);
-  display: inline-flex;
-  font-size: 0.9rem;
-  font-weight: 780;
-  gap: 0.45rem;
-  min-height: 42px;
-  padding: 0 0.8rem;
-  position: fixed;
-  right: 1rem;
-  z-index: 900;
-}
-
-.pwa-install-button:hover {
-  background: var(--accent-strong);
-}
-
 .parking-marker,
 .start-marker,
 .destination-marker {
@@ -1473,8 +1482,15 @@ a {
     margin: -0.55rem 0 -0.45rem;
     padding: 0;
     place-items: center;
+    position: relative;
     touch-action: none;
     width: 100%;
+  }
+
+  .mobile-sheet-grip::before {
+    content: "";
+    inset: -0.9rem 0;
+    position: absolute;
   }
 
   .mobile-sheet-grip:active {
@@ -1536,11 +1552,6 @@ a {
   .control-pane:has(.directions-mode) {
     overflow: hidden;
     padding-right: 1.25rem;
-  }
-
-  .pwa-install-button {
-    bottom: calc(54dvh + 1rem);
-    right: 0.85rem;
   }
 
   .leaflet-bottom.leaflet-right {
@@ -1662,6 +1673,5 @@ a {
 
   .parking-list {
     flex: none;
-    padding-right: 0.25rem;
   }
 }

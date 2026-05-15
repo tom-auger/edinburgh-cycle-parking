@@ -1,7 +1,14 @@
 "use client";
 
-import { Download } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 type BeforeInstallPromptChoice = {
   outcome: "accepted" | "dismissed";
@@ -16,7 +23,18 @@ type BeforeInstallPromptEvent = Event & {
 
 type PwaInstallPromptProps = {
   assetBasePath: string;
+  children: ReactNode;
 };
+
+type PwaInstallPromptContextValue = {
+  canInstall: boolean;
+  installApp: () => Promise<void>;
+};
+
+const PwaInstallPromptContext = createContext<PwaInstallPromptContextValue>({
+  canInstall: false,
+  installApp: async () => {},
+});
 
 function assetPath(assetBasePath: string, path: string) {
   return `${assetBasePath}${path}`;
@@ -26,7 +44,11 @@ function isAndroidBrowser() {
   return /\bAndroid\b/i.test(navigator.userAgent);
 }
 
-export default function PwaInstallPrompt({ assetBasePath }: PwaInstallPromptProps) {
+export function usePwaInstallPrompt() {
+  return useContext(PwaInstallPromptContext);
+}
+
+export default function PwaInstallPrompt({ assetBasePath, children }: PwaInstallPromptProps) {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
@@ -70,7 +92,7 @@ export default function PwaInstallPrompt({ assetBasePath }: PwaInstallPromptProp
     };
   }, []);
 
-  async function installApp() {
+  const installApp = useCallback(async () => {
     if (!installPrompt) {
       return;
     }
@@ -83,16 +105,19 @@ export default function PwaInstallPrompt({ assetBasePath }: PwaInstallPromptProp
     } catch {
       // The browser owns install UI failures; there is no recovery action in-app.
     }
-  }
+  }, [installPrompt]);
 
-  if (!installPrompt) {
-    return null;
-  }
+  const contextValue = useMemo(
+    () => ({
+      canInstall: installPrompt !== null,
+      installApp,
+    }),
+    [installApp, installPrompt],
+  );
 
   return (
-    <button className="pwa-install-button" type="button" onClick={() => void installApp()}>
-      <Download size={17} aria-hidden="true" />
-      Install
-    </button>
+    <PwaInstallPromptContext.Provider value={contextValue}>
+      {children}
+    </PwaInstallPromptContext.Provider>
   );
 }

@@ -85,8 +85,7 @@ export default function RootLayout({
         />
       </head>
       <body>
-        {children}
-        <PwaInstallPrompt assetBasePath={assetBasePath} />
+        <PwaInstallPrompt assetBasePath={assetBasePath}>{children}</PwaInstallPrompt>
       </body>
     </html>
   );

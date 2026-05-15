@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import {
   Bike,
   Crosshair,
+  Download,
   ExternalLink,
   LocateFixed,
   MapPin,
@@ -55,6 +56,7 @@ import {
 } from "@/lib/geo";
 import { describeParkingPoint } from "@/lib/parking";
 import { buildParkingShareUrl, parseShareLinkState } from "@/lib/share-links";
+import { usePwaInstallPrompt } from "@/components/pwa-install-prompt";
 
 const CycleParkingMap = dynamic(() => import("@/components/cycle-parking-map"), {
   ssr: false,
@@ -149,6 +151,7 @@ export default function CycleParkingFinder() {
   const [mobileSheetState, setMobileSheetState] = useState<MobileSheetState>("expanded");
   const [mobileSheetDragOffset, setMobileSheetDragOffset] = useState(0);
   const [mobileSheetDragProgress, setMobileSheetDragProgress] = useState(0);
+  const { canInstall, installApp } = usePwaInstallPrompt();
   const placeSearchCache = useRef(new Map<string, PlaceSearchResult[]>());
   const directionsCache = useRef(new Map<string, CycleRoute>());
   const placeSearchInFlight = useRef(false);
@@ -645,6 +648,11 @@ export default function CycleParkingFinder() {
     setIsSettingsMenuOpen(false);
   }
 
+  function installPwa() {
+    setIsSettingsMenuOpen(false);
+    void installApp();
+  }
+
   function renderThemeSettings() {
     return (
       <div className="settings-menu" ref={settingsMenu}>
@@ -658,7 +666,7 @@ export default function CycleParkingFinder() {
           <Settings size={18} aria-hidden="true" />
         </button>
         {isSettingsMenuOpen ? (
-          <div className="settings-popover" role="menu" aria-label="Theme settings">
+          <div className="settings-popover" role="menu" aria-label="Settings">
             <span className="settings-label">Theme</span>
             <div className="theme-options" role="group" aria-label="Theme">
               {themeOptions.map(({ icon: Icon, label, mode }) => (
@@ -674,6 +682,15 @@ export default function CycleParkingFinder() {
                 </button>
               ))}
             </div>
+            {canInstall ? (
+              <>
+                <span className="settings-label">App</span>
+                <button className="settings-action-button" type="button" onClick={installPwa}>
+                  <Download size={15} aria-hidden="true" />
+                  Install app
+                </button>
+              </>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -751,6 +768,7 @@ export default function CycleParkingFinder() {
           rankedPoints={nearbyPoints}
           route={activeRoute}
           isDirectionsMode={isDirectionsMode}
+          mobileSheetState={isDirectionsMode ? "expanded" : mobileSheetState}
           copiedShareButton={copiedShareButton}
           theme={resolvedTheme}
           onSelectPoint={selectParkingPoint}
@@ -959,12 +977,6 @@ export default function CycleParkingFinder() {
                 </h2>
               </div>
 
-              {locationState.status === "too-far" ? (
-                <div className="status-message unavailable" role="status">
-                  You're very far away from a bike space, showing bike parking in central Edinburgh.
-                </div>
-              ) : null}
-
               {shareError ? (
                 <div className="parking-share-message" role="status">
                   {shareError}
@@ -972,6 +984,13 @@ export default function CycleParkingFinder() {
               ) : null}
 
               <div className="parking-list-scroll">
+                {locationState.status === "too-far" ? (
+                  <div className="parking-list-context" role="status">
+                    You're very far away from a bike space, showing bike parking in central
+                    Edinburgh.
+                  </div>
+                ) : null}
+
                 <ol className="parking-list" aria-label="Nearby cycle parking locations">
                   {closestPoints.map((point, index) => (
                     <li className="parking-list-item" key={point.id}>
