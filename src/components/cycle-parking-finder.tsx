@@ -17,7 +17,16 @@ import {
   Sun,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+  type MouseEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import cycleParkingDataset from "@/data/cycle-parking.json";
 import {
   buildShortCycleRoute,
@@ -58,6 +67,8 @@ const closestParkingResultCount = 8;
 const copiedMessageDurationMs = 1_800;
 const defaultLocale = "en-GB";
 const themeStorageKey = "cycle-parking-theme";
+const mobileSheetDragThresholdPx = 48;
+const mobileSheetDragRangePx = 320;
 
 type LocationState =
   | { status: "fallback"; location: UserLocation }
@@ -78,6 +89,7 @@ type DirectionsState =
 type ShareSource = "list" | "popup";
 type ThemeMode = "system" | "light" | "dark";
 type ResolvedTheme = "light" | "dark";
+type MobileSheetState = "expanded" | "collapsed";
 
 type CopiedShareButton = {
   parkingId: string;
@@ -134,6 +146,9 @@ export default function CycleParkingFinder() {
   const [numberLocale, setNumberLocale] = useState(defaultLocale);
   const [themeMode, setThemeMode] = useState<ThemeMode>("system");
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
+  const [mobileSheetState, setMobileSheetState] = useState<MobileSheetState>("expanded");
+  const [mobileSheetDragOffset, setMobileSheetDragOffset] = useState(0);
+  const [mobileSheetDragProgress, setMobileSheetDragProgress] = useState(0);
   const placeSearchCache = useRef(new Map<string, PlaceSearchResult[]>());
   const directionsCache = useRef(new Map<string, CycleRoute>());
   const placeSearchInFlight = useRef(false);
@@ -141,6 +156,10 @@ export default function CycleParkingFinder() {
   const copiedMessageTimeout = useRef<number | null>(null);
   const attributionDialog = useRef<HTMLDialogElement>(null);
   const settingsMenu = useRef<HTMLDivElement>(null);
+  const mobileSheetDrag = useRef<{ currentY: number; pointerId: number; startY: number } | null>(
+    null,
+  );
+  const ignoreNextSheetGripClick = useRef(false);
 
   useEffect(() => {
     setNumberLocale(navigator.language || defaultLocale);
@@ -273,6 +292,113 @@ export default function CycleParkingFinder() {
       : null;
   const activeRoute = directionsState.status === "loaded" ? directionsState.route : null;
   const isDirectionsMode = directionsState.status !== "idle" && directionsParkingPoint !== null;
+
+  useEffect(() => {
+    if (isDirectionsMode) {
+      setMobileSheetState("expanded");
+    }
+  }, [isDirectionsMode]);
+
+  function toggleMobileSheet() {
+    if (isDirectionsMode) {
+      return;
+    }
+
+    setMobileSheetState((current) => (current === "expanded" ? "collapsed" : "expanded"));
+  }
+
+  function snapMobileSheetFromDrag(deltaY: number) {
+    if (Math.abs(deltaY) < mobileSheetDragThresholdPx) {
+      setMobileSheetDragOffset(0);
+      setMobileSheetDragProgress(mobileSheetState === "expanded" ? 1 : 0);
+      return;
+    }
+
+    ignoreNextSheetGripClick.current = true;
+    setMobileSheetState(deltaY > 0 ? "collapsed" : "expanded");
+    setMobileSheetDragOffset(0);
+    setMobileSheetDragProgress(deltaY > 0 ? 0 : 1);
+  }
+
+  function handleSheetGripPointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (isDirectionsMode) {
+      return;
+    }
+
+    mobileSheetDrag.current = {
+      currentY: event.clientY,
+      pointerId: event.pointerId,
+      startY: event.clientY,
+    };
+    setMobileSheetDragOffset(0);
+    setMobileSheetDragProgress(mobileSheetState === "expanded" ? 1 : 0);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function handleSheetGripPointerMove(event: ReactPointerEvent<HTMLButtonElement>) {
+    const drag = mobileSheetDrag.current;
+    if (!drag || drag.pointerId !== event.pointerId) {
+      return;
+    }
+
+    drag.currentY = event.clientY;
+    const rawDeltaY = event.clientY - drag.startY;
+    const dragDistance =
+      mobileSheetState === "expanded" ? Math.max(0, rawDeltaY) : Math.max(0, -rawDeltaY);
+    const dragProgress =
+      mobileSheetState === "expanded"
+        ? 1 - Math.min(dragDistance / mobileSheetDragRangePx, 1)
+        : Math.min(dragDistance / mobileSheetDragRangePx, 1);
+    const nextOffset =
+      mobileSheetState === "expanded"
+        ? Math.min(rawDeltaY, mobileSheetDragRangePx)
+        : Math.max(rawDeltaY, -mobileSheetDragRangePx);
+    setMobileSheetDragOffset(nextOffset);
+    setMobileSheetDragProgress(dragProgress);
+  }
+
+  function handleSheetGripPointerEnd(event: ReactPointerEvent<HTMLButtonElement>) {
+    const drag = mobileSheetDrag.current;
+    if (!drag || drag.pointerId !== event.pointerId) {
+      return;
+    }
+
+    mobileSheetDrag.current = null;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    snapMobileSheetFromDrag(drag.currentY - drag.startY);
+  }
+
+  function handleSheetGripClick() {
+    if (ignoreNextSheetGripClick.current) {
+      ignoreNextSheetGripClick.current = false;
+      return;
+    }
+
+    toggleMobileSheet();
+  }
+
+  function handleSheetGripPointerCancel(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    mobileSheetDrag.current = null;
+    setMobileSheetDragOffset(0);
+    setMobileSheetDragProgress(mobileSheetState === "expanded" ? 1 : 0);
+  }
+
+  const controlPaneStyle = {
+    "--mobile-sheet-drag-progress":
+      mobileSheetDrag.current !== null
+        ? mobileSheetDragProgress
+        : mobileSheetState === "expanded"
+          ? 1
+          : 0,
+  } as CSSProperties;
 
   function clearDirections() {
     directionsRequestId.current += 1;
@@ -637,7 +763,30 @@ export default function CycleParkingFinder() {
         />
       </section>
 
-      <aside className="control-pane" aria-label="Nearest cycle parking">
+      <aside
+        className="control-pane"
+        aria-label="Nearest cycle parking"
+        data-mobile-sheet-dragging={mobileSheetDragOffset !== 0 ? "true" : undefined}
+        data-mobile-sheet-state={isDirectionsMode ? "expanded" : mobileSheetState}
+        style={controlPaneStyle}
+      >
+        {!isDirectionsMode ? (
+          <button
+            aria-expanded={mobileSheetState === "expanded"}
+            aria-label={
+              mobileSheetState === "expanded" ? "Collapse results panel" : "Expand results panel"
+            }
+            className="mobile-sheet-grip"
+            type="button"
+            onClick={handleSheetGripClick}
+            onPointerCancel={handleSheetGripPointerCancel}
+            onPointerDown={handleSheetGripPointerDown}
+            onPointerMove={handleSheetGripPointerMove}
+            onPointerUp={handleSheetGripPointerEnd}
+          >
+            <span aria-hidden="true" />
+          </button>
+        ) : null}
         {isDirectionsMode ? (
           <section className="directions-mode" aria-label="Cycle directions">
             <div className="directions-mode-header">
@@ -737,138 +886,148 @@ export default function CycleParkingFinder() {
               {renderThemeSettings()}
             </header>
 
-            <section className="reference-panel" aria-label="Search from">
-              <form
-                className="place-search-form"
-                onSubmit={(event) => {
-                  void searchForPlace(event);
-                }}
-              >
-                <label className="search-box">
-                  <Search size={17} aria-hidden="true" />
-                  <span className="sr-only">Search from a place</span>
-                  <input
-                    id="place-search"
-                    name="place-search"
-                    type="search"
-                    value={placeQuery}
-                    placeholder="Street, postcode, or place"
-                    onChange={(event) => setPlaceQuery(event.target.value)}
-                  />
-                </label>
-                <button
-                  className="secondary-location-button"
-                  type="button"
-                  onClick={() => requestLocation()}
-                  disabled={locationState.status === "locating"}
+            <div className="mobile-sheet-body">
+              <section className="reference-panel" aria-label="Search from">
+                <form
+                  className="place-search-form"
+                  onSubmit={(event) => {
+                    void searchForPlace(event);
+                  }}
                 >
+                  <label className="search-box">
+                    <Search size={17} aria-hidden="true" />
+                    <span className="sr-only">Search from a place</span>
+                    <input
+                      id="place-search"
+                      name="place-search"
+                      type="search"
+                      value={placeQuery}
+                      placeholder="Street, postcode, or place"
+                      onChange={(event) => setPlaceQuery(event.target.value)}
+                    />
+                  </label>
+                  <button
+                    className="secondary-location-button"
+                    type="button"
+                    onClick={() => requestLocation()}
+                    disabled={locationState.status === "locating"}
+                  >
                   {locationState.status === "locating" ? (
                     <Crosshair size={18} aria-hidden="true" />
                   ) : (
                     <LocateFixed size={18} aria-hidden="true" />
                   )}
-                  {locationState.status === "locating" ? "Locating" : "Use my location"}
+                  <span className="mobile-action-label">
+                    {locationState.status === "locating" ? "Locating" : "Use my location"}
+                  </span>
                 </button>
                 <button
                   className="place-search-button"
                   type="submit"
                   disabled={isPlaceSearching || placeQuery.trim().length === 0}
                 >
-                  {isPlaceSearching ? "Searching" : "Search"}
+                  <Search size={18} aria-hidden="true" />
+                  <span className="mobile-action-label">
+                    {isPlaceSearching ? "Searching" : "Search"}
+                  </span>
                 </button>
-              </form>
+                </form>
 
-              {placeResults.length > 0 ? (
-                <ol className="place-results" aria-label="Place search results">
-                  {placeResults.map((result) => (
-                    <li key={result.id}>
-                      <button type="button" onClick={() => selectPlace(result)}>
-                        <MapPin size={16} aria-hidden="true" />
-                        <span>{result.name}</span>
+                {placeResults.length > 0 ? (
+                  <ol className="place-results" aria-label="Place search results">
+                    {placeResults.map((result) => (
+                      <li key={result.id}>
+                        <button type="button" onClick={() => selectPlace(result)}>
+                          <MapPin size={16} aria-hidden="true" />
+                          <span>{result.name}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ol>
+                ) : null}
+
+                {placeSearchMessage ? (
+                  <div className="place-search-message" role="status">
+                    {placeSearchMessage}
+                  </div>
+                ) : null}
+              </section>
+
+              <div className="list-heading">
+                <h2>
+                  Nearby cycle parking <span>· {closestPoints.length} closest</span>
+                </h2>
+              </div>
+
+              {locationState.status === "too-far" ? (
+                <div className="status-message unavailable" role="status">
+                  You're very far away from a bike space, showing bike parking in central Edinburgh.
+                </div>
+              ) : null}
+
+              {shareError ? (
+                <div className="parking-share-message" role="status">
+                  {shareError}
+                </div>
+              ) : null}
+
+              <div className="parking-list-scroll">
+                <ol className="parking-list" aria-label="Nearby cycle parking locations">
+                  {closestPoints.map((point, index) => (
+                    <li className="parking-list-item" key={point.id}>
+                      <button
+                        className={[
+                          "parking-row",
+                          index === 0 ? "closest" : null,
+                          point.id === explicitSelectedPoint?.id ? "selected" : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                        type="button"
+                        onClick={() => selectParkingPoint(point.id)}
+                      >
+                        <span className={`rank rank-${index + 1}`}>{index + 1}</span>
+                        <span className="parking-row-copy">
+                          <strong>{point.name}</strong>
+                          <span>
+                            {formatDistance(point.distanceMeters)} away -{" "}
+                            {describeParkingPoint(point)}
+                          </span>
+                        </span>
+                      </button>
+                      <button
+                        aria-label={`Show cycle directions to ${point.name}`}
+                        className="parking-directions-button"
+                        type="button"
+                        onClick={(event) => {
+                          void requestDirections(event, point);
+                        }}
+                      >
+                        <Navigation size={17} aria-hidden="true" />
+                      </button>
+                      <button
+                        aria-label={`Copy link to ${point.name}`}
+                        className="parking-share-button"
+                        type="button"
+                        onClick={(event) => {
+                          void copyParkingLink(event, point);
+                        }}
+                      >
+                        <Share2 size={17} aria-hidden="true" />
+                        {copiedShareButton?.source === "list" &&
+                        copiedShareButton.parkingId === point.id ? (
+                          <span className="parking-share-tooltip" role="status">
+                            Copied
+                          </span>
+                        ) : null}
                       </button>
                     </li>
                   ))}
                 </ol>
-              ) : null}
+              </div>
 
-              {placeSearchMessage ? (
-                <div className="place-search-message" role="status">
-                  {placeSearchMessage}
-                </div>
-              ) : null}
-            </section>
-
-            <div className="list-heading">
-              <h2>
-                Nearby cycle parking <span>· {closestPoints.length} closest</span>
-              </h2>
+              {renderAttributionFooter()}
             </div>
-
-            {locationState.status === "too-far" ? (
-              <div className="status-message unavailable" role="status">
-                You're very far away from a bike space, showing bike parking in central Edinburgh.
-              </div>
-            ) : null}
-
-            {shareError ? (
-              <div className="parking-share-message" role="status">
-                {shareError}
-              </div>
-            ) : null}
-
-            <ol className="parking-list" aria-label="Nearby cycle parking locations">
-              {closestPoints.map((point, index) => (
-                <li className="parking-list-item" key={point.id}>
-                  <button
-                    className={[
-                      "parking-row",
-                      index === 0 ? "closest" : null,
-                      point.id === explicitSelectedPoint?.id ? "selected" : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    type="button"
-                    onClick={() => selectParkingPoint(point.id)}
-                  >
-                    <span className={`rank rank-${index + 1}`}>{index + 1}</span>
-                    <span className="parking-row-copy">
-                      <strong>{point.name}</strong>
-                      <span>
-                        {formatDistance(point.distanceMeters)} away - {describeParkingPoint(point)}
-                      </span>
-                    </span>
-                  </button>
-                  <button
-                    aria-label={`Show cycle directions to ${point.name}`}
-                    className="parking-directions-button"
-                    type="button"
-                    onClick={(event) => {
-                      void requestDirections(event, point);
-                    }}
-                  >
-                    <Navigation size={17} aria-hidden="true" />
-                  </button>
-                  <button
-                    aria-label={`Copy link to ${point.name}`}
-                    className="parking-share-button"
-                    type="button"
-                    onClick={(event) => {
-                      void copyParkingLink(event, point);
-                    }}
-                  >
-                    <Share2 size={17} aria-hidden="true" />
-                    {copiedShareButton?.source === "list" &&
-                    copiedShareButton.parkingId === point.id ? (
-                      <span className="parking-share-tooltip" role="status">
-                        Copied
-                      </span>
-                    ) : null}
-                  </button>
-                </li>
-              ))}
-            </ol>
-
-            {renderAttributionFooter()}
           </>
         )}
       </aside>
