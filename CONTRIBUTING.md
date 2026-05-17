@@ -1,4 +1,4 @@
-# Contributing to edinburgh-cycle-parking
+# Contributing to neuk-bike
 
 Thanks for contributing.
 
@@ -12,8 +12,8 @@ Requirements:
 Clone the repo and install dependencies:
 
 ```bash
-git clone https://github.com/taugr/edinburgh-cycle-parking.git
-cd edinburgh-cycle-parking
+git clone https://github.com/taugr/neuk-bike.git
+cd neuk-bike
 pnpm install
 ```
 
@@ -61,4 +61,4 @@ pnpm run test
 
 ## Questions
 
-Open an issue at [https://github.com/taugr/edinburgh-cycle-parking/issues](https://github.com/taugr/edinburgh-cycle-parking/issues).
+Open an issue at [https://github.com/taugr/neuk-bike/issues](https://github.com/taugr/neuk-bike/issues).

@@ -6,8 +6,8 @@ import './globals.css';
 
 const siteUrl = 'https://neuk.bike';
 const sitePath = '/';
-const siteTitle = 'Edinburgh Cycle Parking';
-const siteDescription = 'Find nearby cycle parking spaces across Edinburgh.';
+const siteTitle = 'Bike Neuks';
+const siteDescription = 'Find nearby cycle parking across Edinburgh.';
 const socialImage = '/og-image.png';
 const lightThemeColor = '#0f766e';
 const darkThemeColor = '#0f1715';
@@ -71,7 +71,7 @@ export default function RootLayout({
         <link rel="manifest" href={assetPath('/site.webmanifest')} />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-title" content="Cycle Parking" />
+        <meta name="apple-mobile-web-app-title" content="Bike Neuks" />
         <meta
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"

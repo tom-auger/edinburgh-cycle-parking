@@ -9,7 +9,7 @@ const outputRoot = path.join(projectRoot, 'out');
 const parkingOutputRoot = path.join(outputRoot, 'parking');
 const siteUrl = 'https://neuk.bike';
 const sitePath = '';
-const siteTitle = 'Edinburgh Cycle Parking';
+const siteTitle = 'Bike Neuks';
 const assetBasePath = sitePath;
 const socialImageWidth = 1200;
 const socialImageHeight = 630;
@@ -386,7 +386,7 @@ function buildSocialImage(point) {
     </g>
   </g>
   <g transform="translate(525 116)">
-    <text x="0" y="34" fill="#0f766e" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="28" font-weight="800">Edinburgh Cycle Parking</text>
+    <text x="0" y="34" fill="#0f766e" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="28" font-weight="800">Bike Neuks</text>
     ${titleLines
       .map(
         (line, index) =>

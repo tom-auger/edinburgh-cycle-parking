@@ -1020,8 +1020,11 @@ export default function CycleParkingFinder() {
                 <img src="favicon.svg" alt="" />
               </div>
               <div>
-                <h1>Edinburgh Cycle Parking</h1>
-                <p>{formattedParkingLocationCount} bike neuks</p>
+                <h1>Bike Neuks</h1>
+                <p>
+                  {formattedParkingLocationCount} cycle parking spots in
+                  Edinburgh
+                </p>
               </div>
               {renderThemeSettings()}
             </header>

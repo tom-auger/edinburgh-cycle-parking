@@ -1,7 +1,7 @@
-# Edinburgh Cycle Parking
+# Bike Neuks
 
 <p align="center">
-  <img src="./public/icon-192.png" alt="Edinburgh Cycle Parking icon" width="140" />
+  <img src="./public/icon-192.png" alt="Bike Neuks icon" width="140" />
   <br />
   <a href="https://neuk.bike/">
     <img src="https://img.shields.io/badge/live-GitHub%20Pages-0f766e" alt="live app" />
@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/badge/license-MIT-blue" alt="license" />
   </a>
   <br />
-  Static, mobile-friendly map for finding nearby City of Edinburgh Council cycle parking.
+  Static, mobile-friendly map for finding nearby cycle parking across Edinburgh.
 </p>
 
 ## Features

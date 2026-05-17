@@ -433,12 +433,8 @@ describe('geo utilities', () => {
 
   it('builds parking share links without dropping the current base path', () => {
     expect(
-      buildParkingShareUrl(
-        'https://taugr.github.io',
-        '/edinburgh-cycle-parking',
-        'near',
-      ),
-    ).toBe('https://taugr.github.io/edinburgh-cycle-parking/parking/near/');
+      buildParkingShareUrl('https://taugr.github.io', '/neuk-bike', 'near'),
+    ).toBe('https://taugr.github.io/neuk-bike/parking/near/');
   });
 
   it('builds root-hosted parking share links for the custom domain', () => {
@@ -451,10 +447,10 @@ describe('geo utilities', () => {
     expect(
       buildParkingShareUrl(
         'https://taugr.github.io',
-        '/edinburgh-cycle-parking/parking/near',
+        '/neuk-bike/parking/near',
         'far',
       ),
-    ).toBe('https://taugr.github.io/edinburgh-cycle-parking/parking/far/');
+    ).toBe('https://taugr.github.io/neuk-bike/parking/far/');
   });
 
   it('parses valid URL coordinates and rejects invalid coordinates', () => {

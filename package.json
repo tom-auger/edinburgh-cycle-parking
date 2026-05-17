@@ -1,5 +1,5 @@
 {
-  "name": "edinburgh-cycle-parking",
+  "name": "neuk-bike",
   "version": "0.1.0",
   "private": true,
   "description": "Static mobile-friendly map for finding nearby Edinburgh cycle parking.",
@@ -13,13 +13,13 @@
   ],
   "homepage": "https://neuk.bike",
   "bugs": {
-    "url": "https://github.com/taugr/edinburgh-cycle-parking/issues"
+    "url": "https://github.com/taugr/neuk-bike/issues"
   },
   "license": "MIT",
   "author": "Tom Auger <tom@tau.gr>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/taugr/edinburgh-cycle-parking.git"
+    "url": "git+https://github.com/taugr/neuk-bike.git"
   },
   "type": "module",
   "scripts": {
