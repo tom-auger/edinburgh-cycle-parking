@@ -1069,6 +1069,16 @@ a {
   margin: 0.25rem 0 0;
 }
 
+.directions-parking-details {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem 0.9rem;
+  line-height: 1.2;
+  margin-top: 0.35rem;
+  max-width: 100%;
+}
+
 .directions-mode-header button {
   align-items: center;
   background: var(--surface);

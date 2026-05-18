@@ -63,7 +63,6 @@ import {
   sortByDistance,
 } from '@/lib/geo';
 import {
-  describeParkingPoint,
   getParkingPopupDetails,
   type ParkingPopupIcon,
 } from '@/lib/parking';
@@ -102,6 +101,55 @@ function ParkingListDetailIcon({ icon }: { icon: ParkingPopupIcon }) {
   const Icon = parkingListIconByName[icon] ?? CircleHelp;
 
   return <Icon size={13} aria-hidden="true" />;
+}
+
+const parkingDetailLabels = new Set(['Spaces', 'Type', 'Cover']);
+
+function ParkingDetailStrip({
+  className,
+  includeDistance,
+  point,
+}: {
+  className?: string;
+  includeDistance?: boolean;
+  point: ParkingPoint;
+}) {
+  const parkingDetails = getParkingPopupDetails(point);
+  const visibleDetails = parkingDetails.details.filter((detail) =>
+    parkingDetailLabels.has(detail.label),
+  );
+
+  if (!includeDistance && visibleDetails.length === 0) {
+    return null;
+  }
+
+  return (
+    <span
+      aria-label="Parking details"
+      className={['parking-row-details', className].filter(Boolean).join(' ')}
+    >
+      {includeDistance
+        ? parkingDetails.metrics.map((metric) => (
+            <span className="parking-row-detail" key={metric.label}>
+              <MapPin size={13} aria-hidden="true" />
+              <span>{metric.value}</span>
+            </span>
+          ))
+        : null}
+      {visibleDetails.map((detail) => (
+        <span className="parking-row-detail" key={detail.label}>
+          <span className="parking-row-detail-icon">
+            {detail.emphasis ?? <ParkingListDetailIcon icon={detail.icon} />}
+          </span>
+          <span>
+            {detail.label === 'Spaces'
+              ? detail.value.toLowerCase()
+              : detail.value}
+          </span>
+        </span>
+      ))}
+    </span>
+  );
 }
 
 type LocationState =
@@ -924,11 +972,14 @@ export default function CycleParkingFinder() {
                 </div>
                 <div>
                   <h1>{directionsParkingPoint?.name ?? 'Directions'}</h1>
-                  <p>
-                    {directionsParkingPoint
-                      ? describeParkingPoint(directionsParkingPoint)
-                      : 'Cycle route'}
-                  </p>
+                  {directionsParkingPoint ? (
+                    <ParkingDetailStrip
+                      className="directions-parking-details"
+                      point={directionsParkingPoint}
+                    />
+                  ) : (
+                    <p>Cycle route</p>
+                  )}
                 </div>
               </div>
               <button type="button" onClick={clearDirections}>
@@ -1142,12 +1193,6 @@ export default function CycleParkingFinder() {
                   aria-label="Nearby cycle parking locations"
                 >
                   {closestPoints.map((point, index) => {
-                    const parkingDetails = getParkingPopupDetails(point);
-                    const listDetails = parkingDetails.details.filter(
-                      (detail) =>
-                        ['Spaces', 'Type', 'Cover'].includes(detail.label),
-                    );
-
                     return (
                       <li className="parking-list-item" key={point.id}>
                         <button
@@ -1168,36 +1213,7 @@ export default function CycleParkingFinder() {
                           </span>
                           <span className="parking-row-copy">
                             <strong>{point.name}</strong>
-                            <span className="parking-row-details">
-                              {parkingDetails.metrics.map((metric) => (
-                                <span
-                                  className="parking-row-detail"
-                                  key={metric.label}
-                                >
-                                  <MapPin size={13} aria-hidden="true" />
-                                  <span>{metric.value}</span>
-                                </span>
-                              ))}
-                              {listDetails.map((detail) => (
-                                <span
-                                  className="parking-row-detail"
-                                  key={detail.label}
-                                >
-                                  <span className="parking-row-detail-icon">
-                                    {detail.emphasis ?? (
-                                      <ParkingListDetailIcon
-                                        icon={detail.icon}
-                                      />
-                                    )}
-                                  </span>
-                                  <span>
-                                    {detail.label === 'Spaces'
-                                      ? detail.value.toLowerCase()
-                                      : detail.value}
-                                  </span>
-                                </span>
-                              ))}
-                            </span>
+                            <ParkingDetailStrip includeDistance point={point} />
                           </span>
                         </button>
                         <button
